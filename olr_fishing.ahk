@@ -49,7 +49,7 @@ BuffText := [
 BuffName := ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
-BuffRest := [3500, 3500, 3500, 5000, 5000]
+BuffRest := [3500, 3500, 3500, 5200, 5200]
 
 MemX := [-1, -1, -1, -1, -1]
 MemY := [-1, -1, -1, -1, -1]
