@@ -6,10 +6,10 @@
 ; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
 ; disappears (it does not stay at the cursor).
 ;
-; Fishing searches the full screen for the 5 buff icons. Once a buff
-; is found, its position is remembered; later searches look nearby
-; first (within 100 pixels up and down) and fall back to a full-screen
-; search if not found nearby.
+; Fishing searches the top strip (x 518-1165, y 0-392) for the 5 buff
+; icons, every 10 ms. Once a buff is found, its position is remembered;
+; later searches look nearby first (within 100 pixels up and down) and
+; fall back to the top strip if not found nearby.
 ; Each scan runs one pass over all 5 buffs at tolerance 0.1.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
@@ -37,8 +37,17 @@ global FishingOn := false
 global FoundNear := false
 
 BuffErrTight := 0.1
-ScanMs := 100
+ScanMs := 10
 NearR := 100
+
+; Search region: the buff bar lives in this top strip (x 518-1165,
+; y 0-392). Searching only this strip is much faster than full screen,
+; and it excludes the left-edge game world (x < 518) whose dark patches
+; kept false-matching every buff, and the fishing panel below y 392.
+SearchX1 := 518
+SearchY1 := 0
+SearchX2 := 1165
+SearchY2 := 392
 
 ; Known false-positive spots: dark patches of game world that match a
 ; buff pattern even though no buff is there. (36,339) is a dark patch
@@ -129,10 +138,11 @@ ScanPass(err, label) {
     return false
 }
 
-; Search buff i: nearby first if its position is remembered, else full screen.
-; On success, remember the position and return true.
+; Search buff i: nearby first if its position is remembered, else the
+; top search strip. On success, remember the position and return true.
 FindBuff(i, err, &fx, &fy) {
     global BuffText, MemX, MemY, NearR, FoundNear
+    global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     if (MemX[i] >= 0) {
         x1 := Max(MemX[i] - NearR, 0)
@@ -146,7 +156,7 @@ FindBuff(i, err, &fx, &fy) {
             return true
         }
     }
-    if (TryFind(BuffText[i], 0, 0, A_ScreenWidth, A_ScreenHeight, err, &fx, &fy)) {
+    if (TryFind(BuffText[i], SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
         MemX[i] := fx
         MemY[i] := fy
         return true
