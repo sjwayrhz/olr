@@ -12,7 +12,8 @@
 ; first acts on it. Once a buff is found, its position is remembered;
 ; later searches look nearby first (within 100 pixels up and down) and
 ; fall back to the top strip if not found nearby.
-; Each scan runs one pass over all 5 buffs at tolerance 0.2.
+; Each scan runs one pass over all 5 buffs, each at its own tolerance:
+; 0.4 for buff_num5 and buff_num7, 0.3 for the rest.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -51,7 +52,16 @@ global Scanning := false
 global RestUntil := 0
 global RestBuff := 0
 
-BuffErrTight := 0.3
+; Tolerance per buff. num5 and num7 use the looser 0.4 (their live
+; icons are often missed); num4, num6, num8 use 0.3. Only two numbers
+; to change here: ErrTight and ErrLoose.
+; WARNING: 0.4 is above the 0.387 separation between num5 and num7,
+; so at 0.4 each one's pattern also matches the other's icon. The
+; loop checks num5 before num7, so a num7 icon on screen is read as
+; num5 (wrong key). If wrong keys appear, lower ErrLoose to 0.35.
+ErrTight := 0.3
+ErrLoose := 0.4
+BuffErr := [ErrTight, ErrLoose, ErrTight, ErrLoose, ErrTight]
 ScanMs := 10
 NearR := 100
 
@@ -87,7 +97,11 @@ BuffText := [
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
-BuffRest := [2600, 2600, 2600, 5100, 5100]
+; Rest times: only two numbers to change. Short rest follows the
+; buffs that press Space (num4, num5, num6); long rest follows the
+; rest-only buffs (num7, num8).
+RestShort := 2600
+RestLong := 5100
 
 MemX := [-1, -1, -1, -1, -1]
 MemY := [-1, -1, -1, -1, -1]
@@ -164,27 +178,28 @@ HideTip() {
 }
 
 FishTimer() {
-    global MasterOn, FishingOn, BuffErrTight, Scanning
+    global MasterOn, FishingOn, Scanning
     if (!MasterOn || !FishingOn || Scanning) {
         return
     }
     Scanning := true
-    ScanPass(BuffErrTight, "tight")
+    ScanPass("tight")
     Scanning := false
 }
 
-; One scan pass over all 5 buffs at the given tolerance.
+; One scan pass over all 5 buffs, each at its own tolerance
+; (BuffErr[i]: 0.4 for num5/num7, 0.3 for the rest).
 ; Acts on the first match and returns true.
 ; If resting, the buff just acted on is skipped (it is still on screen),
 ; but a DIFFERENT buff interrupts the rest and is acted on at once.
-ScanPass(err, label) {
-    global BuffText, RestUntil, RestBuff
+ScanPass(label) {
+    global BuffText, BuffErr, RestUntil, RestBuff
     if (RestUntil > 0 && A_TickCount >= RestUntil) {
         RestUntil := 0
     }
     resting := (RestUntil > 0)
     for i, _ in BuffText {
-        if (FindBuff(i, err, &fx, &fy)) {
+        if (FindBuff(i, BuffErr[i], &fx, &fy)) {
             if (resting && i = RestBuff) {
                 continue
             }
@@ -258,7 +273,7 @@ LogAction(i, fx, fy, label) {
 }
 
 DoBuffAction(i) {
-    global BuffKey, BuffSpace, BuffRest, RestUntil, RestBuff
+    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, RestBuff
     Send("{" BuffKey[i] "}")
     if (BuffSpace[i]) {
         Sleep(2000)
@@ -267,6 +282,8 @@ DoBuffAction(i) {
     ; Start the rest without blocking: record which buff and when the
     ; rest ends. Scanning keeps running; a different buff found during
     ; this rest interrupts it at once (see ScanPass).
+    ; Short rest after the Space buffs (num4/5/6), long rest after the
+    ; rest-only buffs (num7/num8).
     RestBuff := i
-    RestUntil := A_TickCount + BuffRest[i]
+    RestUntil := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
 }
