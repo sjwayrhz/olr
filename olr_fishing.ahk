@@ -6,11 +6,12 @@
 ; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
 ; disappears (it does not stay at the cursor).
 ;
-; Fishing watches the buff bar at the top of the screen for the 5 buff
-; icons. Once a buff is found, its position is remembered; later
-; searches look nearby first (faster) and fall back to a search of the
-; top strip if not found nearby. The fishing panel (right side) is
-; never searched: its icons are different and would only confuse it.
+; Fishing watches only the buff bar row at the top of the screen for
+; the 5 buff icons. Once a buff is found, its position is remembered;
+; later searches look nearby first (faster) and fall back to a search
+; of the buff bar row if not found nearby. Nothing outside the buff
+; bar row is ever searched: not the fishing panel (right side), not
+; the game world, which keeps producing false matches.
 ; Each scan runs one pass over all 5 buffs at tolerance 0.05.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
@@ -40,15 +41,17 @@ BuffErrTight := 0.05
 ScanMs := 400
 NearR := 70
 
-; The buffs live in the buff bar at the top of the screen (y~76-108).
-; The fishing panel (right side, y 300+) shows different, bigger icons
-; and must NOT be detected, so the search is restricted to the top
-; strip. This also excludes the dark patch at (36,339) that falsely
-; matched Buff0007.
-SearchX1 := 0
-SearchY1 := 0
+; The buffs live in the buff bar at the top of the screen (icons at
+; y~76-108, x~619-684 in the reference screenshots). The search is
+; restricted to a tight box around the buff bar row, because the
+; game world keeps producing false matches elsewhere: the fishing
+; panel (right side, y 300+), the dark patch at (36,339), and a
+; patch at (36,137) that falsely matched Buff0005 even though no
+; 0005 buff was on screen. Only look where buffs can actually be.
+SearchX1 := 200
+SearchY1 := 60
 SearchX2 := A_ScreenWidth
-SearchY2 := 200
+SearchY2 := 130
 
 ; Buff order: 0007, 0005, 0020, 0001, 0030
 BuffText := [
