@@ -26,14 +26,17 @@
 ; interrupts it at once; the buff just acted on is skipped during its
 ; own rest (it is still on screen).
 ;
-; FindText patterns: threshold 120, generated from the 32x32 buff
-; crops (tools/gen_buff_patterns.py). Threshold 180 was too dark: the
-; patterns were 89-95% dark (only 53-111 bright pixels), so a dark
-; patch of game world kept false-matching buff_num4 at (36,339).
-; At 140 the binarized icons looked blurry and live icons were often
-; missed. At 120 the patterns are 49-70% dark (311-519 bright pixels),
-; the shapes are clearer, and the worst pair still separates by
-; 0.351, far above the 0.1 tolerance.
+; FindText patterns: threshold 80, generated from the fresh 32x32
+; live-buff crops (images/buff_num*_1.jpg, tools/gen_buff_patterns.py).
+; The 5 new crops all carry the white "1s" countdown text, which makes
+; them look alike: at T=120 the worst pair (num4 vs num8, both orange
+; arrows) separates by only 0.270, below the 0.3 tolerance. T=80 is
+; the best threshold for this set: worst pair separates by 0.333,
+; above 0.3, with fragility similar to T=120. Note the orange-arrow
+; buffs num4/num6/num8 stay close (num8 pattern vs num4 image is
+; 0.266); the loop checks num4 before num8, so a num4 icon is read
+; as num4 first. Keep the tolerance at 0.3 -- do not raise it, or
+; num4/num6/num8 will be confused.
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
@@ -87,11 +90,11 @@ BadSpotR := 50
 
 ; Buff order: num4, num5, num6, num7, num8
 BuffText := [
-    "|<buff_num4>*120$32.zzzzzs00006zzzzxjzzzzPzzw7qzzzMxj1ztjPk0Dxqw07zxj07zvPk1zzqw7Dzxj3lzzPlYDzqyl7ztjxHbyPyrrzqz0wzxjzTbzPhqxzqnRwTxdjzzzOKPzzqBU7zxXk4TzNS3rzqjXrzxissvzP0wjzqUDDzxU0000Tzzzzy"
-    , "|<buff_num5>*120$32.zzzzzs0000600001U0003M0000q0k02BUz00NMQw00a73kk1UUDs0MA3z06177t5UTljMM1YfDq0FbvRURNbvM6rrra10wyxUTTbjM1rxxqUBwThi1vzzPk0DzqSU2DxXY01zPzXUDqzzqsljztzUPzwzzqzyTztU0000Tzzzzy"
-    , "|<buff_num6>*120$32.zzzzzs00006zzzzxjzzzzPsDzzqwPzzxjNzsDPjy03qzzU0xjzy0DPzzU3qzzk0xjzs0DPzY03qTl7lxbxHaTPyrrrqz0wxxjzTZzPzqxBqzxwPBjzzzNPzzyP6zzUbljzW0wPztsSazxr7pjxsxrPzw70qzzDs5U0000Tzzzzy"
-    , "|<buff_num7>*120$32.zzzzzs00006zy0zxjs00zPk1U7qy7T1xj70wDPX41XqnXGARXn0HbNdrC8qmztXBcjtYHOPaT4q7lDr5YxLYsPKrrT6n0wxtgzTa7P7rxkqlhwS5hDzztPFnzzqqDzzxhcT3CPv3lj6zPgL1jrkj3PztDrqzwTzxU0000Tzzzzy"
-    , "|<buff_num8>*120$32.zzzzzs00006zzzzxjszyDPtnzjqwzzrxj3xvzPVyBzqs71zxj1UTzPtk1zqyT0Txjzk3zPzY0zqzl7rxjxF7zPyrrzqz0wzxjzTazPzqxzqzxATxUDnz3M0M7yK03BzVXVztoMADyO68Lra1jdssUPzwjU6zyDs1U0000Tzzzzy"
+    "|<buff_num4>*80$32.00000000000zzzzwDzzzz3zzk7kzzs0wC07Ub3U07tks03zAC03zv3U1zyks0DzoD3Vzx3kcDz0wG3zsD6V7y3lcLzUwu4zwCOVYz35gxbkWHcEw0bzwC0E0k3U5061w000Ez0433Dk7X4Tw6kUVz30k6DkU00Vw00000000002"
+    , "|<buff_num5>*80$32.000000000000000000000000000000000y00000M00033U000UCs0080w00101s00DUAE01c1/U0G7nA06t6E01gLnU0Poo006xZb01fxhkUH8R4A3Vyt1U05z0E007k1U00r31300Etr400DtUU03zk400zs00000000000002"
+    , "|<buff_num6>*80$32.00000000000zzzzwDvzzz3s7zzkw0TzwCEG073js01knz00QBzw073TzU1kjzk0w/zs0D0zg03kTm3kw7yV4D1zcLXkzu4owDqVZb3tcx8kQG8N467by81c3020w1U0UDlU003wk080zkW7UDtUEm3wM20ky800400000000002"
+    , "|<buff_num7>*80$32.00000000000zw03wD000z3U007kw2H0wC70MD3301VkUW0AQ220131VY88kmNM048XlUF0/cT002m7k00CZ4E03jLG0EOAkk8aza225jxUEUnsQ487zxE20U7zUU23Cs80C362810D0U3420+3U012qE63kbk13w00000080002"
+    , "|<buff_num8>*80$32.00000000000zzzzwDkTy73lnzDkwCTrwC0xnz30iBzks71zwC1UDz3kk1zkw80DwDjU3z3zc0TkzG3nwDyV5z3zcLzkzu4vwDyVaT3zcxlkNm0S007Vz00003s0000jU0001U003oE003b0000Uk000s2000800000000000002"
 ]
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]

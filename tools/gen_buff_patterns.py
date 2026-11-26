@@ -1,19 +1,20 @@
 """Generate FindText patterns for the 5 fishing buff icons (olr project).
 
-Sources: ~/workspace/olr/images/buff_num*.png
-(32x32 crops from her screenshots, 2026-11-26).
+Sources: ~/workspace/olr/images/buff_num*_1.jpg
+(fresh 32x32 crops of the live buff bar, 2026-11-26 night, x=619, with the
+"1s" countdown text on them -- these are what the script actually sees
+in game, so the patterns are made from them instead of the older
+buff_num*.png crops).
 
 Method: same encoder as fenix gen_recycle_patterns.py.
-Threshold 120 (was 140): at 140 the binarized icons looked blurry and
-the live icons were often missed. At 120 the worst-pair separation is
-0.351 (highest in the 120-140 band), fragility (pixels within +-15 of
-the threshold) is 567 vs 572 at 140, and bright counts are 311-519
-(more white features, clearer shapes). At 180 the patterns were 89-95%
-dark (only 53-111 bright pixels), so a dark patch of game world with a
-few bright speckles matched them and buff_num4 kept false-firing at
-(36,339). At 120 the patterns are 30-51% bright, much harder for a
-dark patch to match, while the worst pair separation is still far
-above the 0.1 tolerance.
+Threshold 80: the 5 new images all carry the white "1s" text, which
+makes them look alike, so separation is much worse than the old set
+(old set worst sep 0.351 at T=120; new set worst sep 0.270 at T=120,
+below the 0.3 tolerance -- the orange-arrow buffs num4/num6/num8 would
+be confused). T=80 is the best threshold for the new set: worst sep
+0.333 (above 0.3), fragility 639 (similar to 633 at T=120). T=90 is
+only 0.304 (too thin a margin); T=160/180 separate better but are far
+more fragile (1627/893) and mostly dark.
 
 Also prints a pairwise separation check (per-class err both directions):
 a pair is safe when both err1 and err0 stay above 0.2 for both directions.
@@ -28,7 +29,7 @@ def gray(px):
     return (r * 38 + g * 75 + b * 15) >> 7
 
 CHARS = "0123456789+/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-T = 120
+T = 80
 
 def encode(bm, w, name):
     bits = ''.join('1' if bm[y][x] else '0' for y in range(len(bm)) for x in range(w))
@@ -73,11 +74,11 @@ def per_class_err(pat, img):
 
 NAMES = ['buff_num4', 'buff_num5', 'buff_num6', 'buff_num7', 'buff_num8']
 FILES = {
-    'buff_num4': 'buff_num4.png',
-    'buff_num5': 'buff_num5.png',
-    'buff_num6': 'buff_num6.png',
-    'buff_num7': 'buff_num7.png',
-    'buff_num8': 'buff_num8.png',
+    'buff_num4': 'buff_num4_1.jpg',
+    'buff_num5': 'buff_num5_1.jpg',
+    'buff_num6': 'buff_num6_1.jpg',
+    'buff_num7': 'buff_num7_1.jpg',
+    'buff_num8': 'buff_num8_1.jpg',
 }
 BASE = '/home/hatch/workspace/olr/images/'
 

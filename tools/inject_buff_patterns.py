@@ -64,8 +64,8 @@ assert got[0].lstrip().startswith('"'), "first element must not have a leading c
 assert all(ln.lstrip().startswith(', "') for ln in got[1:]), "later elements need a leading comma"
 for name, ln in zip(ORDER, got):
     assert f"|<{name}>" in ln, f"line {ln[:40]} is not {name}"
-    assert "*120$" in ln, f"wrong threshold in line: {ln[:50]}"
-print("injected 5 patterns at T=120 in canonical order (buff_num4,buff_num5,buff_num6,buff_num7,buff_num8),")
+    assert "*80$" in ln, f"wrong threshold in line: {ln[:50]}"
+print("injected 5 patterns at T=80 in canonical order (buff_num4,buff_num5,buff_num6,buff_num7,buff_num8),")
 print("first element has no leading comma; verified byte-identical to generator output")
 for ln in got:
     print(" ", ln[:60], "... len", len(ln))
