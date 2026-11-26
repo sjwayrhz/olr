@@ -7,10 +7,12 @@
 ; disappears (it does not stay at the cursor).
 ;
 ; Fishing searches the top strip (x 518-1165, y 0-392) for the 5 buff
-; icons, every 10 ms. Once a buff is found, its position is remembered;
+; icons. Four timers fire every 10 ms, staggered ~2.5 ms apart, so a
+; scan is attempted about every 2.5 ms; whichever timer finds a buff
+; first acts on it. Once a buff is found, its position is remembered;
 ; later searches look nearby first (within 100 pixels up and down) and
 ; fall back to the top strip if not found nearby.
-; Each scan runs one pass over all 5 buffs at tolerance 0.1.
+; Each scan runs one pass over all 5 buffs at tolerance 0.2.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -36,8 +38,9 @@
 global MasterOn := true
 global FishingOn := false
 global FoundNear := false
+global Scanning := false
 
-BuffErrTight := 0.1
+BuffErrTight := 0.2
 ScanMs := 10
 NearR := 100
 
@@ -78,7 +81,23 @@ BuffRest := [3500, 3500, 3500, 5200, 5200]
 MemX := [-1, -1, -1, -1, -1]
 MemY := [-1, -1, -1, -1, -1]
 
-SetTimer(FishTimer, ScanMs)
+; Four scan timers, each firing every 10 ms, staggered ~2.5 ms apart
+; (offsets 0, 2, 5, 7 ms), so a scan is attempted about every 2.5 ms.
+; Whichever timer finds a buff first acts on it and the script rests;
+; while a scan is in progress the other timers skip (Scanning guard),
+; because AHK runs on one thread and two scans must never overlap.
+SetTimer(FishTimer1, ScanMs)
+SetTimer(StartFishTimer2, -2)
+SetTimer(StartFishTimer3, -5)
+SetTimer(StartFishTimer4, -7)
+
+FishTimer1() { FishTimer() }
+FishTimer2() { FishTimer() }
+FishTimer3() { FishTimer() }
+FishTimer4() { FishTimer() }
+StartFishTimer2() { SetTimer(FishTimer2, ScanMs) }
+StartFishTimer3() { SetTimer(FishTimer3, ScanMs) }
+StartFishTimer4() { SetTimer(FishTimer4, ScanMs) }
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
@@ -118,11 +137,13 @@ HideTip() {
 }
 
 FishTimer() {
-    global MasterOn, FishingOn, BuffErrTight
-    if (!MasterOn || !FishingOn) {
+    global MasterOn, FishingOn, BuffErrTight, Scanning
+    if (!MasterOn || !FishingOn || Scanning) {
         return
     }
+    Scanning := true
     ScanPass(BuffErrTight, "tight")
+    Scanning := false
 }
 
 ; One scan pass over all 5 buffs at the given tolerance.
