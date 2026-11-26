@@ -22,9 +22,8 @@
 ;   buff_num6 -> Numpad6, wait 2s, Space, rest 2.6s
 ;   buff_num7 -> Numpad7, rest 5.1s
 ;   buff_num8 -> Numpad8, rest 5.1s
-; Rest does not stop scanning: a different buff found during a rest
-; interrupts it at once; the buff just acted on is skipped during its
-; own rest (it is still on screen).
+; Rest is a real wait: after an action the script waits the full
+; rest (2.6s / 5.1s) before its next action, no buff interrupts it.
 ;
 ; FindText patterns: threshold 80, generated from the fresh 32x32
 ; live-buff crops (images/buff_num*_1.jpg, tools/gen_buff_patterns.py).
@@ -48,22 +47,22 @@ global FoundNear := false
 global Scanning := false
 
 ; Rest state: after acting on a buff, the script rests until RestUntil
-; (a tick count). The rest does NOT block scanning: while resting, a
-; DIFFERENT buff found on screen interrupts the rest immediately and
-; gets acted on. The buff just acted on (RestBuff) is still on screen
-; during its rest, so finding it again must not re-trigger.
+; (a tick count). The rest is a real wait: while resting, ScanPass
+; returns at once and no buff is acted on, so the script waits the
+; full RestShort/RestLong before its next action. The buff just acted
+; on (RestBuff) is still on screen during its rest.
 global RestUntil := 0
 global RestBuff := 0
 
-; Tolerance per buff. num4/num5/num6 use ErrTight (0.2), num7/num8
-; use ErrLoose (0.3). Only two numbers to change here.
+; Tolerance per buff. num4/num5/num6 use ErrTight (0.1), num7/num8
+; use ErrLoose (0.2). Only two numbers to change here.
 ; 2026-11-26: ErrLoose was tried at 0.4 and reverted the same night:
 ; 0.4 is above the 0.387 separation between num5 and num7, so each
 ; one's pattern also matched the other's icon (num7 read as num5).
 ; With the current T=80 patterns the worst pair (num4 vs num8) only
-; separates by 0.333, so keep both numbers at or below 0.3.
-ErrTight := 0.2
-ErrLoose := 0.3
+; separates by 0.333, so keep both numbers at or below 0.2.
+ErrTight := 0.1
+ErrLoose := 0.2
 BuffErr := [ErrTight, ErrTight, ErrTight, ErrLoose, ErrLoose]
 ScanMs := 10
 NearR := 100
@@ -191,22 +190,24 @@ FishTimer() {
 }
 
 ; One scan pass over all 5 buffs, each at its own tolerance
-; (BuffErr[i]: 0.2 for num4/num5/num6, 0.3 for num7/num8).
+; (BuffErr[i]: 0.1 for num4/num5/num6, 0.2 for num7/num8).
 ; Acts on the first match and returns true.
-; If resting, the buff just acted on is skipped (it is still on screen),
-; but a DIFFERENT buff interrupts the rest and is acted on at once.
+; While resting (after an action), nothing is acted on at all: the
+; rest is a real wait of RestShort/RestLong, not just a skip of the
+; buff just acted on. (Before 2026-11-27 a different buff interrupted
+; the rest at once, so when buffs appeared in quick succession the
+; script never actually waited -- that is why the rest seemed broken.)
 ScanPass(label) {
     global BuffText, BuffErr, RestUntil, RestBuff
     if (RestUntil > 0 && A_TickCount >= RestUntil) {
         RestUntil := 0
     }
-    resting := (RestUntil > 0)
+    if (RestUntil > 0) {
+        return false
+    }
     for i, _ in BuffText {
         if (FindBuff(i, BuffErr[i], &fx, &fy)) {
-            if (resting && i = RestBuff) {
-                continue
-            }
-            LogAction(i, fx, fy, resting ? label "-interrupt" : label)
+            LogAction(i, fx, fy, label)
             DoBuffAction(i)
             return true
         }
@@ -283,8 +284,8 @@ DoBuffAction(i) {
         Send("{Space}")
     }
     ; Start the rest without blocking: record which buff and when the
-    ; rest ends. Scanning keeps running; a different buff found during
-    ; this rest interrupts it at once (see ScanPass).
+    ; rest ends. During the rest ScanPass returns at once, so the
+    ; script waits the full rest before its next action (see ScanPass).
     ; Short rest after the Space buffs (num4/5/6), long rest after the
     ; rest-only buffs (num7/num8).
     RestBuff := i
