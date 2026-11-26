@@ -114,6 +114,15 @@ BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
 
+; Blood bar search region: the rectangle from (680,124) to (850,241).
+; Narrower than the buff strip -- the blue bar only ever appears here,
+; so searching just this rectangle is faster and cannot false-match
+; anything elsewhere on screen.
+BloodX1 := 680
+BloodY1 := 124
+BloodX2 := 850
+BloodY2 := 241
+
 ; Blood bar pattern, 32x12, threshold 125, from images/buff_blood.png
 ; (replaced 2026-11-27: the old one was a 49x15 red HP bar, this one
 ; is the blue bar right under it). The bar is a blue gradient (gray
@@ -143,10 +152,10 @@ SetTimer(StartFishTimer2, -2)
 SetTimer(StartFishTimer3, -5)
 SetTimer(StartFishTimer4, -7)
 
-; Blood bar check: every 500 ms, look for the fish HP bar in the
-; top strip. Finding it enters fishing mode automatically (no F5
-; needed); losing it leaves fishing mode. Runs only while the
-; script itself is on (MasterOn).
+; Blood bar check: every 500 ms, look for the blue bar in its
+; rectangle (680,124)-(850,241). Finding it enters fishing mode
+; automatically (no F5 needed); losing it leaves fishing mode.
+; Runs only while the script itself is on (MasterOn).
 SetTimer(BloodCheck, 500)
 
 FishTimer1() {
@@ -185,12 +194,13 @@ SC029:: {
     }
 }
 
-; Blood bar check, every 500 ms. When the fish HP bar appears in the
-; top strip, enter fishing mode automatically and show a tip at the
-; mouse cursor. When it disappears, leave fishing mode.
+; Blood bar check, every 500 ms. When the blue bar appears in its
+; rectangle (680,124)-(850,241), enter fishing mode automatically
+; and show a tip at the mouse cursor. When it disappears, leave
+; fishing mode.
 BloodCheck() {
     global MasterOn, FishingOn, BloodText, BloodErr
-    global SearchX1, SearchY1, SearchX2, SearchY2
+    global BloodX1, BloodY1, BloodX2, BloodY2
     global RestUntil, BoostNext
     if (!MasterOn) {
         return
@@ -198,7 +208,7 @@ BloodCheck() {
     bx := 0
     by := 0
     matches := ""
-    try matches := FindText(&bx, &by, SearchX1, SearchY1, SearchX2, SearchY2, BloodErr, BloodErr, BloodText)
+    try matches := FindText(&bx, &by, BloodX1, BloodY1, BloodX2, BloodY2, BloodErr, BloodErr, BloodText)
     found := IsObject(matches) && matches.Length > 0
     if (found && !FishingOn) {
         FishingOn := true
