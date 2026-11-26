@@ -114,12 +114,15 @@ BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
 
-; Blood bar (fish HP bar) pattern, 49x15, threshold 100, from
-; images/buff_blood.png. The bar is a nearly uniform red gradient
-; (gray 92-119), so T=100 gives the best dark/bright mix (501 dark,
-; 234 bright). Found in the same top strip as the buffs; when it
+; Blood bar pattern, 32x12, threshold 125, from images/buff_blood.png
+; (replaced 2026-11-27: the old one was a 49x15 red HP bar, this one
+; is the blue bar right under it). The bar is a blue gradient (gray
+; 119-137), so T=125 gives a perfect dark/bright split (193 dark,
+; 191 bright). Found in the same top strip as the buffs; when it
 ; appears, fishing has started and the script enters fishing mode.
-BloodText := "|<buff_blood>*100$49.00000000000000000000000001zzzzzzwDzzzzzzyTzzzzzzzDzzzzzzzbzzzzzzzrzzzzzzzvzzzzzzzwzzzzzzzyDzzzzzzz1zzzzzzzU7zzzzzzk00000004"
+; Verified against her 5 screenshots: matches at (590-592, 58) with
+; max err 0.057-0.093, well inside the 0.2 tolerance.
+BloodText := "|<buff_blood>*125$32.0000000000000M1z07zzzk1zzzw0zzzz0Tzzzk7zzzw0zzzz00zzzk0Dzzw00000U"
 BloodErr := 0.2
 ; Rest times: only two numbers to change. Short rest follows the
 ; buffs that press Space (num4, num5, num6); long rest follows the
