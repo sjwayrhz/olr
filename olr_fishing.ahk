@@ -2,9 +2,11 @@
 ; Requires FindText.ahk in the same folder.
 ;
 ; SC029 (` key, top-left under Esc) : toggle the whole script on / off
-; F5                               : toggle fishing on / off
-; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
-; disappears (it does not stay at the cursor).
+; Fishing mode is automatic: every 500 ms the script looks for the
+; fish HP bar (blood bar) in the top strip; finding it enters fishing
+; mode, losing it leaves fishing mode. Each change shows a tooltip
+; at the mouse cursor for 2 seconds, then it disappears (it does not
+; stay at the cursor).
 ;
 ; Fishing searches the top strip (x 518-1165, y 0-392) for the 5 buff
 ; icons. Four timers fire every 10 ms, staggered ~2.5 ms apart, so a
@@ -112,6 +114,14 @@ BuffText := [
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
+
+; Blood bar (fish HP bar) pattern, 49x15, threshold 100, from
+; images/buff_blood.png. The bar is a nearly uniform red gradient
+; (gray 92-119), so T=100 gives the best dark/bright mix (501 dark,
+; 234 bright). Found in the same top strip as the buffs; when it
+; appears, fishing has started and the script enters fishing mode.
+BloodText := "|<buff_blood>*100$49.00000000000000000000000001zzzzzzwDzzzzzzyTzzzzzzzDzzzzzzzbzzzzzzzrzzzzzzzvzzzzzzzwzzzzzzzyDzzzzzzz1zzzzzzzU7zzzzzzk00000004"
+BloodErr := 0.2
 ; Rest times: only two numbers to change. Short rest follows the
 ; buffs that press Space (num4, num5, num6); long rest follows the
 ; rest-only buffs (num7, num8).
@@ -130,6 +140,12 @@ SetTimer(FishTimer1, ScanMs)
 SetTimer(StartFishTimer2, -2)
 SetTimer(StartFishTimer3, -5)
 SetTimer(StartFishTimer4, -7)
+
+; Blood bar check: every 500 ms, look for the fish HP bar in the
+; top strip. Finding it enters fishing mode automatically (no F5
+; needed); losing it leaves fishing mode. Runs only while the
+; script itself is on (MasterOn).
+SetTimer(BloodCheck, 500)
 
 FishTimer1() {
     FishTimer()
@@ -167,19 +183,29 @@ SC029:: {
     }
 }
 
-; F5 toggles fishing (only while the script is running).
-F5:: {
-    global MasterOn, FishingOn, RestUntil, BoostNext
+; Blood bar check, every 500 ms. When the fish HP bar appears in the
+; top strip, enter fishing mode automatically and show a tip at the
+; mouse cursor. When it disappears, leave fishing mode.
+BloodCheck() {
+    global MasterOn, FishingOn, BloodText, BloodErr
+    global SearchX1, SearchY1, SearchX2, SearchY2
+    global RestUntil, BoostNext
     if (!MasterOn) {
         return
     }
-    FishingOn := !FishingOn
-    if (FishingOn) {
-        ShowTip("钓鱼功能开启")
-    } else {
+    bx := 0
+    by := 0
+    matches := ""
+    try matches := FindText(&bx, &by, SearchX1, SearchY1, SearchX2, SearchY2, BloodErr, BloodErr, BloodText)
+    found := IsObject(matches) && matches.Length > 0
+    if (found && !FishingOn) {
+        FishingOn := true
+        ShowTip("发现血条，钓鱼功能开启")
+    } else if (!found && FishingOn) {
+        FishingOn := false
         RestUntil := 0
         BoostNext := false
-        ShowTip("钓鱼功能关闭")
+        ShowTip("血条消失，钓鱼功能关闭")
     }
 }
 
