@@ -22,8 +22,11 @@
 ;   buff_num6 -> Numpad6, wait 2s, Space, rest 2.6s
 ;   buff_num7 -> Numpad7, rest 5.1s
 ;   buff_num8 -> Numpad8, rest 5.1s
-; Rest is a real wait: after an action the script waits the full
-; rest (2.6s / 5.1s) before its next action, no buff interrupts it.
+; Rest is a real wait for the low-priority buffs (num4/5/6): after an
+; action the script waits the full rest (2.6s / 5.1s) before pressing
+; one of them. The high-priority buffs (num7/num8) are checked first
+; and interrupt a rest at once, so they are pressed the moment they
+; appear.
 ;
 ; FindText patterns: threshold 80, generated from the fresh 32x32
 ; live-buff crops (images/buff_num*_1.jpg, tools/gen_buff_patterns.py).
@@ -47,10 +50,10 @@ global FoundNear := false
 global Scanning := false
 
 ; Rest state: after acting on a buff, the script rests until RestUntil
-; (a tick count). The rest is a real wait: while resting, ScanPass
-; returns at once and no buff is acted on, so the script waits the
-; full RestShort/RestLong before its next action. The buff just acted
-; on (RestBuff) is still on screen during its rest.
+; (a tick count). The rest is a real wait for the low-priority buffs
+; (num4/5/6): while resting, only the high-priority buffs (num7/num8)
+; are looked for, and finding one interrupts the rest at once. The
+; buff just acted on (RestBuff) is still on screen during its rest.
 global RestUntil := 0
 global RestBuff := 0
 
@@ -192,22 +195,32 @@ FishTimer() {
 ; One scan pass over all 5 buffs, each at its own tolerance
 ; (BuffErr[i]: 0.1 for num4/num5/num6, 0.2 for num7/num8).
 ; Acts on the first match and returns true.
-; While resting (after an action), nothing is acted on at all: the
-; rest is a real wait of RestShort/RestLong, not just a skip of the
-; buff just acted on. (Before 2026-11-27 a different buff interrupted
-; the rest at once, so when buffs appeared in quick succession the
-; script never actually waited -- that is why the rest seemed broken.)
+; Priority: num7 and num8 are high priority and are checked first;
+; num4/num5/num6 are low priority and are checked after them.
+; Rest: after an action the script waits RestShort/RestLong before
+; acting on a low-priority buff. A high-priority buff (num7/num8)
+; found during the rest interrupts it at once and is acted on
+; immediately; the low-priority ones never interrupt, so the rest
+; is a real wait for them. (Before 2026-11-27 every buff interrupted
+; the rest, so when buffs appeared in quick succession the script
+; never actually waited -- that is why the rest seemed broken.)
 ScanPass(label) {
     global BuffText, BuffErr, RestUntil, RestBuff
     if (RestUntil > 0 && A_TickCount >= RestUntil) {
         RestUntil := 0
     }
-    if (RestUntil > 0) {
-        return false
-    }
-    for i, _ in BuffText {
+    resting := (RestUntil > 0)
+    ; High priority first, then low priority. Indices: 1=num4, 2=num5,
+    ; 3=num6, 4=num7, 5=num8. So check 4,5 (num7,num8) before 1,2,3.
+    order := [4, 5, 1, 2, 3]
+    for _, i in order {
+        ; Low-priority buffs (indices 1,2,3 = num4/5/6) never
+        ; interrupt a rest.
+        if (resting && i <= 3) {
+            continue
+        }
         if (FindBuff(i, BuffErr[i], &fx, &fy)) {
-            LogAction(i, fx, fy, label)
+            LogAction(i, fx, fy, resting ? label "-interrupt" : label)
             DoBuffAction(i)
             return true
         }
@@ -284,10 +297,11 @@ DoBuffAction(i) {
         Send("{Space}")
     }
     ; Start the rest without blocking: record which buff and when the
-    ; rest ends. During the rest ScanPass returns at once, so the
-    ; script waits the full rest before its next action (see ScanPass).
-    ; Short rest after the Space buffs (num4/5/6), long rest after the
-    ; rest-only buffs (num7/num8).
+    ; rest ends. During the rest only the high-priority buffs
+    ; (num7/num8) are looked for and can interrupt it; the
+    ; low-priority buffs (num4/5/6) wait out the full rest (see
+    ; ScanPass). Short rest after the Space buffs (num4/5/6), long
+    ; rest after the rest-only buffs (num7/num8).
     RestBuff := i
     RestUntil := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
 }
