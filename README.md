@@ -7,7 +7,7 @@ ArcheAge: One Last Ride 的 AHK 脚本（AHK v2）。
 - `olr_fishing.ahk`：钓鱼助手。双击运行。
 - `FindText.ahk`：识图库（feiyue 的 FindText），钓鱼脚本依赖它。
 - `images/`：5 张 buff 原图（32x32）。
-- `tools/gen_buff_patterns.py`：从原图生成 FindText 图案的编码器（阈值 180）。
+- `tools/gen_buff_patterns.py`：从原图生成 FindText 图案的编码器（阈值 140）。
 
 ## 钓鱼助手用法
 
