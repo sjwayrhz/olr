@@ -6,9 +6,10 @@
 ; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
 ; disappears (it does not stay at the cursor).
 ;
-; Fishing watches the full screen for the 5 buff icons. Once a buff is
-; found, its position is remembered; later searches look nearby first
-; (faster) and fall back to a full-screen search if not found nearby.
+; Fishing watches the right side of the screen for the 5 buff icons
+; (the panel only appears there). Once a buff is found, its position
+; is remembered; later searches look nearby first (faster) and fall
+; back to a search of the right side if not found nearby.
 ; Each scan runs one pass over all 5 buffs at tolerance 0.05.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
@@ -37,6 +38,15 @@ global FoundNear := false
 BuffErrTight := 0.05
 ScanMs := 400
 NearR := 70
+
+; Fishing panel only ever appears on the right side of the screen.
+; (36,339) is a dark patch on the left that falsely matches Buff0007
+; (its pattern is 95% dark, only 53 bright pixels), so the search is
+; restricted to the right side and that spot is never searched.
+SearchX1 := 900
+SearchY1 := 300
+SearchX2 := A_ScreenWidth
+SearchY2 := A_ScreenHeight
 
 ; Buff order: 0007, 0005, 0020, 0001, 0030
 BuffText := [
@@ -118,13 +128,13 @@ ScanPass(err, label) {
 ; Search buff i: nearby first if its position is remembered, else full screen.
 ; On success, remember the position and return true.
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, MemX, MemY, NearR, FoundNear
+    global BuffText, MemX, MemY, NearR, FoundNear, SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     if (MemX[i] >= 0) {
-        x1 := Max(MemX[i] - NearR, 0)
-        y1 := Max(MemY[i] - NearR, 0)
-        x2 := Min(MemX[i] + NearR, A_ScreenWidth)
-        y2 := Min(MemY[i] + NearR, A_ScreenHeight)
+        x1 := Max(MemX[i] - NearR, SearchX1)
+        y1 := Max(MemY[i] - NearR, SearchY1)
+        x2 := Min(MemX[i] + NearR, SearchX2)
+        y2 := Min(MemY[i] + NearR, SearchY2)
         if (TryFind(BuffText[i], x1, y1, x2, y2, err, &fx, &fy)) {
             MemX[i] := fx
             MemY[i] := fy
@@ -132,7 +142,7 @@ FindBuff(i, err, &fx, &fy) {
             return true
         }
     }
-    if (TryFind(BuffText[i], 0, 0, A_ScreenWidth, A_ScreenHeight, err, &fx, &fy)) {
+    if (TryFind(BuffText[i], SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
         MemX[i] := fx
         MemY[i] := fy
         return true
