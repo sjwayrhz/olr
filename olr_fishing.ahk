@@ -16,11 +16,14 @@
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
-;   buff4s_0007.png -> Numpad4, wait 2s, Space, rest 2s (no scanning)
-;   buff4s_0005.png -> Numpad5, wait 2s, Space, rest 2s (no scanning)
-;   buff4s_0020.png -> Numpad6, wait 2s, Space, rest 2s (no scanning)
-;   buff4s_0001.png -> Numpad7, rest 5s (no scanning)
-;   buff4s_0030.png -> Numpad8, rest 5s (no scanning)
+;   buff4s_0007.png -> Numpad4, wait 2s, Space, rest 2.6s
+;   buff4s_0005.png -> Numpad5, wait 2s, Space, rest 2.6s
+;   buff4s_0020.png -> Numpad6, wait 2s, Space, rest 2.6s
+;   buff4s_0001.png -> Numpad7, rest 5.1s
+;   buff4s_0030.png -> Numpad8, rest 5.1s
+; Rest does not stop scanning: a different buff found during a rest
+; interrupts it at once; the buff just acted on is skipped during its
+; own rest (it is still on screen).
 ;
 ; FindText patterns: threshold 120, generated from the 32x32 buff
 ; crops (tools/gen_buff_patterns.py). Threshold 180 was too dark: the
@@ -39,6 +42,14 @@ global MasterOn := true
 global FishingOn := false
 global FoundNear := false
 global Scanning := false
+
+; Rest state: after acting on a buff, the script rests until RestUntil
+; (a tick count). The rest does NOT block scanning: while resting, a
+; DIFFERENT buff found on screen interrupts the rest immediately and
+; gets acted on. The buff just acted on (RestBuff) is still on screen
+; during its rest, so finding it again must not re-trigger.
+global RestUntil := 0
+global RestBuff := 0
 
 BuffErrTight := 0.3
 ScanMs := 10
@@ -115,10 +126,11 @@ StartFishTimer4() {
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
-    global MasterOn, FishingOn
+    global MasterOn, FishingOn, RestUntil
     MasterOn := !MasterOn
     if (!MasterOn) {
         FishingOn := false
+        RestUntil := 0
         ShowTip("脚本已暂停")
     } else {
         ShowTip("脚本已开启")
@@ -127,7 +139,7 @@ SC029:: {
 
 ; F5 toggles fishing (only while the script is running).
 F5:: {
-    global MasterOn, FishingOn
+    global MasterOn, FishingOn, RestUntil
     if (!MasterOn) {
         return
     }
@@ -135,6 +147,7 @@ F5:: {
     if (FishingOn) {
         ShowTip("钓鱼功能开启")
     } else {
+        RestUntil := 0
         ShowTip("钓鱼功能关闭")
     }
 }
@@ -162,11 +175,20 @@ FishTimer() {
 
 ; One scan pass over all 5 buffs at the given tolerance.
 ; Acts on the first match and returns true.
+; If resting, the buff just acted on is skipped (it is still on screen),
+; but a DIFFERENT buff interrupts the rest and is acted on at once.
 ScanPass(err, label) {
-    global BuffText
+    global BuffText, RestUntil, RestBuff
+    if (RestUntil > 0 && A_TickCount >= RestUntil) {
+        RestUntil := 0
+    }
+    resting := (RestUntil > 0)
     for i, _ in BuffText {
         if (FindBuff(i, err, &fx, &fy)) {
-            LogAction(i, fx, fy, label)
+            if (resting && i = RestBuff) {
+                continue
+            }
+            LogAction(i, fx, fy, resting ? label "-interrupt" : label)
             DoBuffAction(i)
             return true
         }
@@ -236,11 +258,15 @@ LogAction(i, fx, fy, label) {
 }
 
 DoBuffAction(i) {
-    global BuffKey, BuffSpace, BuffRest
+    global BuffKey, BuffSpace, BuffRest, RestUntil, RestBuff
     Send("{" BuffKey[i] "}")
     if (BuffSpace[i]) {
         Sleep(2000)
         Send("{Space}")
     }
-    Sleep(BuffRest[i])
+    ; Start the rest without blocking: record which buff and when the
+    ; rest ends. Scanning keeps running; a different buff found during
+    ; this rest interrupts it at once (see ScanPass).
+    RestBuff := i
+    RestUntil := A_TickCount + BuffRest[i]
 }
