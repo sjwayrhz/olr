@@ -3,11 +3,16 @@
 ;
 ; SC029 (` key, top-left under Esc) : toggle the whole script on / off
 ; F5                               : toggle fishing on / off
-; A tooltip follows the mouse cursor and shows the current state.
+; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
+; disappears (it does not stay at the cursor).
 ;
 ; Fishing watches the full screen for the 5 buff icons. Once a buff is
 ; found, its position is remembered; later searches look nearby first
 ; (faster) and fall back to a full-screen search if not found nearby.
+; Each scan runs two passes: a tight pass (tolerance 0.1) over all 5
+; buffs first, then a loose pass (0.2). A buff that matches tightly
+; wins over one that only matches loosely, whatever the scan order.
+; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
 ;   buff4s_0007.png -> Numpad4, wait 2s, Space, rest 2s (no scanning)
@@ -16,9 +21,12 @@
 ;   buff4s_0001.png -> Numpad7, rest 5s (no scanning)
 ;   buff4s_0030.png -> Numpad8, rest 5s (no scanning)
 ;
-; FindText patterns: threshold 120, tolerance 0.2, generated from the
-; 32x32 buff crops (tools/gen_buff_patterns.py). Pairwise separation
-; checked 2026-11-26: no two patterns match each other at 0.2.
+; FindText patterns: threshold 180, generated from the 32x32 buff
+; crops (tools/gen_buff_patterns.py). Threshold 120 was too weak: the
+; worst pair (0007 vs 0030) separated by only 0.244, and the live
+; animated icon crossed it, so everything matched 0007 first and only
+; Numpad4 was ever pressed (2026-11-26 bug). At 180 the worst pair
+; separates by 0.434.
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
@@ -26,20 +34,22 @@
 
 global MasterOn := true
 global FishingOn := false
+global FoundNear := false
 
-BuffErr1 := 0.2
-BuffErr0 := 0.2
+BuffErrTight := 0.1
+BuffErrLoose := 0.2
 ScanMs := 400
 NearR := 70
 
 ; Buff order: 0007, 0005, 0020, 0001, 0030
 BuffText := [
-    "|<Buff0007>*120$32.zzzzzs00006zzzzxjzzzzPzzw7qzzzMxj1ztjPk0Dxqw07zxj07zvPk1zzqw7Dzxj3lzzPlYDzqyl7ztjxHbyPyrrzqz0wzxjzTbzPhqxzqnRwTxdjzzzOKPzzqBU7zxXk4TzNS3rzqjXrzxissvzP0wjzqUDDzxU0000Tzzzzy"
-    , "|<Buff0005>*120$32.zzzzzs0000600001U0003M0000q0k02BUz00NMQw00a73kk1UUDs0MA3z06177t5UTljMM1YfDq0FbvRURNbvM6rrra10wyxUTTbjM1rxxqUBwThi1vzzPk0DzqSU2DxXY01zPzXUDqzzqsljztzUPzwzzqzyTztU0000Tzzzzy"
-    , "|<Buff0020>*120$32.zzzzzs00006zzzzxjzzzzPsDzzqwPzzxjNzsDPjy03qzzU0xjzy0DPzzU3qzzk0xjzs0DPzY03qTl7lxbxHaTPyrrrqz0wxxjzTZzPzqxBqzxwPBjzzzNPzzyP6zzUbljzW0wPztsSazxr7pjxsxrPzw70qzzDs5U0000Tzzzzy"
-    , "|<Buff0001>*120$32.zzzzzs00006zy0zxjs00zPk1U7qy7T1xj70wDPX41XqnXGARXn0HbNdrC8qmztXBcjtYHOPaT4q7lDr5YxLYsPKrrT6n0wxtgzTa7P7rxkqlhwS5hDzztPFnzzqqDzzxhcT3CPv3lj6zPgL1jrkj3PztDrqzwTzxU0000Tzzzzy"
-    , "|<Buff0030>*120$32.zzzzzs00006zzzzxjszyDPtnzjqwzzrxj3xvzPVyBzqs71zxj1UTzPtk1zqyT0Txjzk3zPzY0zqzl7rxjxF7zPyrrzqz0wzxjzTazPzqxzqzxATxUDnz3M0M7yK03BzVXVztoMADyO68Lra1jdssUPzwjU6zyDs1U0000Tzzzzy"
+    "|<Buff0007>*180$32.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzxzzzzzzzzzzzzzzTzzzzjzzzztzzzzzTzzzzvzzzzbTzzztzzzzxTbzzyrrzzzUxzzzzTbzzjrxzzzxwzzzjzzzyzzzzzDyTzzrs7zzxyDzzzzjzzzzzzzzzjzzzzzzzzzzzzzzzzzzzy"
+    , "|<Buff0005>*180$32.zzzzzzzzzzznzzzzs3zzzw0Lzzz7lzzzlzzTzwSytzz7bvxzlwzzDwDHzvz3zDzbyTzzxznZzzzzxjzzzxTbzzyrrzzzUxzznzTbzyzrxzzbxwzzznzzzzkjzzzztzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzy"
+    , "|<Buff0020>*180$32.zzzzzzzzzzrzzzzzzzzzzzzzzzzyzzzzzzzzzzzzzzzzzvzzzzzDzzzzbzzzzvzzzzxzzzzazzzzxTzzzxTbzzyrrzzzUxzzzzTbzzzrxxzzxwvzzzzzTzzzzzTzzxznzzr1yzzzwTjzzzrzzzzzzzzzzzzzzzzzzzzzzzzzzzy"
+    , "|<Buff0001>*180$32.zzzzzzzzzzzzzzzzzzwrzzzjyzzzzzlzzztyTzzznnzzzvSzzzwPbzzzjRzzzzrTzzzxvzzazyzzxTrjzxLztzyrrzDzUxzvzzTbzzzrxtzxxxzDzzzzzzzzzzzzzzzzzzznzzzzzzzzzzzrzzzzzzzzzzzzzzzzzzzzzzzzzzy"
+    , "|<Buff0030>*180$32.zzzzzzzzzzzzzzzzzzzzzzvzzzzzzzzzzDzzzzvzzzzw7zzzzDzzzzvzzzzzTzzzzzzzzzzbzzzztzzzzxTbzzyrrzzzUxzzzzTbzzzrxzzzxwzzzzzzzw0TzzzA7zzrztzvyyTzyzDxzzb3zzzzkzzzzzTzzzzvzzzzzzzzzzy"
 ]
+BuffName := ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
 BuffRest := [2000, 2000, 2000, 5000, 5000]
@@ -48,7 +58,6 @@ MemX := [-1, -1, -1, -1, -1]
 MemY := [-1, -1, -1, -1, -1]
 
 SetTimer(FishTimer, ScanMs)
-SetTimer(TipTimer, 100)
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
@@ -56,8 +65,10 @@ SC029:: {
     MasterOn := !MasterOn
     if (!MasterOn) {
         FishingOn := false
+        ShowTip("脚本已暂停")
+    } else {
+        ShowTip("脚本已开启")
     }
-    TipTimer()
 }
 
 ; F5 toggles fishing (only while the script is running).
@@ -67,51 +78,67 @@ F5:: {
         return
     }
     FishingOn := !FishingOn
-    TipTimer()
+    if (FishingOn) {
+        ShowTip("钓鱼功能开启")
+    } else {
+        ShowTip("钓鱼功能关闭")
+    }
 }
 
-TipTimer() {
-    global MasterOn, FishingOn
-    if (!MasterOn) {
-        text := "脚本已暂停"
-    } else if (FishingOn) {
-        text := "钓鱼功能开启"
-    } else {
-        text := "钓鱼功能关闭"
-    }
+; Show a tooltip at the mouse cursor for 2 seconds, then hide it.
+ShowTip(text) {
     MouseGetPos(&mx, &my)
     ToolTip(text, mx + 20, my + 20)
+    SetTimer(HideTip, -2000)
+}
+
+HideTip() {
+    ToolTip()
 }
 
 FishTimer() {
-    global MasterOn, FishingOn, BuffText
+    global MasterOn, FishingOn, BuffErrTight, BuffErrLoose
     if (!MasterOn || !FishingOn) {
         return
     }
+    if (ScanPass(BuffErrTight, "tight")) {
+        return
+    }
+    ScanPass(BuffErrLoose, "loose")
+}
+
+; One scan pass over all 5 buffs at the given tolerance.
+; Acts on the first match and returns true.
+ScanPass(err, label) {
+    global BuffText
     for i, _ in BuffText {
-        if (FindBuff(i, &fx, &fy)) {
+        if (FindBuff(i, err, &fx, &fy)) {
+            LogAction(i, fx, fy, label)
             DoBuffAction(i)
-            return
+            return true
         }
     }
+    return false
 }
 
 ; Search buff i: nearby first if its position is remembered, else full screen.
 ; On success, remember the position and return true.
-FindBuff(i, &fx, &fy) {
-    global BuffText, MemX, MemY, NearR
+FindBuff(i, err, &fx, &fy) {
+    global BuffText, MemX, MemY, NearR, FoundNear
+    FoundNear := false
     if (MemX[i] >= 0) {
         x1 := Max(MemX[i] - NearR, 0)
         y1 := Max(MemY[i] - NearR, 0)
         x2 := Min(MemX[i] + NearR, A_ScreenWidth)
         y2 := Min(MemY[i] + NearR, A_ScreenHeight)
-        if (TryFind(BuffText[i], x1, y1, x2, y2, &fx, &fy)) {
+        if (TryFind(BuffText[i], x1, y1, x2, y2, err, &fx, &fy)) {
             MemX[i] := fx
             MemY[i] := fy
+            FoundNear := true
             return true
         }
     }
-    if (TryFind(BuffText[i], 0, 0, A_ScreenWidth, A_ScreenHeight, &fx, &fy)) {
+    if (TryFind(BuffText[i], 0, 0, A_ScreenWidth, A_ScreenHeight, err, &fx, &fy)) {
         MemX[i] := fx
         MemY[i] := fy
         return true
@@ -119,18 +146,25 @@ FindBuff(i, &fx, &fy) {
     return false
 }
 
-TryFind(text, x1, y1, x2, y2, &fx, &fy) {
-    global BuffErr1, BuffErr0
+TryFind(text, x1, y1, x2, y2, err, &fx, &fy) {
     fx := 0
     fy := 0
     matches := ""
-    try matches := FindText(&fx, &fy, x1, y1, x2, y2, BuffErr1, BuffErr0, text)
+    try matches := FindText(&fx, &fy, x1, y1, x2, y2, err, err, text)
     if (!IsObject(matches) || matches.Length = 0) {
         return false
     }
     fx := matches[1].mx
     fy := matches[1].my
     return true
+}
+
+LogAction(i, fx, fy, label) {
+    global BuffName, BuffKey, FoundNear
+    where := FoundNear ? "near" : "full"
+    line := FormatTime(, "yyyy-MM-dd HH:mm:ss") " " BuffName[i] " -> " BuffKey[i]
+        " at " fx "," fy " " where " " label "`n"
+    try FileAppend(line, A_ScriptDir "\olr_fishing_log.txt")
 }
 
 DoBuffAction(i) {

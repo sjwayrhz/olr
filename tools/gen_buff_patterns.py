@@ -3,8 +3,12 @@
 Sources: ~/workspace/user/files/buff-4s-2026-11-26/buff4s_*.png
 (32x32 crops from her screenshots, 2026-11-26).
 
-Method: same encoder as fenix gen_recycle_patterns.py, threshold 120.
-Bit 1 = gray <= 120 (dark). Script tolerance is 0.2 (BuffErr1/BuffErr0).
+Method: same encoder as fenix gen_recycle_patterns.py.
+Threshold 180 (not 120): at 120 the worst pair (0007 vs 0030) had a
+false-match limit of only 0.244, barely above the 0.2 tolerance, and the
+live animated icon pushed it under, so every buff matched 0007 first
+(2026-11-26 bug: only Numpad4 was ever pressed). At 180 the worst pair
+is 0.434, nearly double the margin.
 
 Also prints a pairwise separation check (per-class err both directions):
 a pair is safe when both err1 and err0 stay above 0.2 for both directions.
@@ -19,7 +23,7 @@ def gray(px):
     return (r * 38 + g * 75 + b * 15) >> 7
 
 CHARS = "0123456789+/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-T = 120
+T = 180
 
 def encode(bm, w, name):
     bits = ''.join('1' if bm[y][x] else '0' for y in range(len(bm)) for x in range(w))
