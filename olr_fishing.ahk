@@ -12,8 +12,8 @@
 ; first acts on it. Once a buff is found, its position is remembered;
 ; later searches look nearby first (within 100 pixels up and down) and
 ; fall back to the top strip if not found nearby.
-; Each scan runs one pass over all 5 buffs, each at its own tolerance:
-; 0.4 for buff_num5 and buff_num7, 0.3 for the rest.
+; Each scan runs one pass over all 5 buffs, each at its own tolerance
+; (BuffErr[i]; currently 0.3 for all, num5/num7 use ErrLoose).
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -52,15 +52,14 @@ global Scanning := false
 global RestUntil := 0
 global RestBuff := 0
 
-; Tolerance per buff. num5 and num7 use the looser 0.4 (their live
-; icons are often missed); num4, num6, num8 use 0.3. Only two numbers
-; to change here: ErrTight and ErrLoose.
-; WARNING: 0.4 is above the 0.387 separation between num5 and num7,
-; so at 0.4 each one's pattern also matches the other's icon. The
-; loop checks num5 before num7, so a num7 icon on screen is read as
-; num5 (wrong key). If wrong keys appear, lower ErrLoose to 0.35.
+; Tolerance per buff. num5 and num7 use ErrLoose, num4/num6/num8 use
+; ErrTight. Only two numbers to change here.
+; 2026-11-26: ErrLoose was tried at 0.4 and reverted the same night:
+; 0.4 is above the 0.387 separation between num5 and num7, so each
+; one's pattern also matched the other's icon (num7 read as num5).
+; Keep ErrLoose below 0.387 (0.35 is the safe ceiling).
 ErrTight := 0.3
-ErrLoose := 0.4
+ErrLoose := 0.3
 BuffErr := [ErrTight, ErrLoose, ErrTight, ErrLoose, ErrTight]
 ScanMs := 10
 NearR := 100
