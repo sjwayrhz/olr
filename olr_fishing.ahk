@@ -6,12 +6,10 @@
 ; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
 ; disappears (it does not stay at the cursor).
 ;
-; Fishing watches only the buff bar row at the top of the screen for
-; the 5 buff icons. Once a buff is found, its position is remembered;
-; later searches look nearby first (faster) and fall back to a search
-; of the buff bar row if not found nearby. Nothing outside the buff
-; bar row is ever searched: not the fishing panel (right side), not
-; the game world, which keeps producing false matches.
+; Fishing searches the full screen for the 5 buff icons. Once a buff
+; is found, its position is remembered; later searches look nearby
+; first (within 100 pixels up and down) and fall back to a full-screen
+; search if not found nearby.
 ; Each scan runs one pass over all 5 buffs at tolerance 0.05.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
@@ -39,19 +37,12 @@ global FoundNear := false
 
 BuffErrTight := 0.05
 ScanMs := 400
-NearR := 70
+NearR := 100
 
-; The buffs live in the buff bar at the top of the screen (icons at
-; y~76-108, x~619-684 in the reference screenshots). The search is
-; restricted to a tight box around the buff bar row, because the
-; game world keeps producing false matches elsewhere: the fishing
-; panel (right side, y 300+), the dark patch at (36,339), and a
-; patch at (36,137) that falsely matched Buff0005 even though no
-; 0005 buff was on screen. Only look where buffs can actually be.
-SearchX1 := 200
-SearchY1 := 60
-SearchX2 := A_ScreenWidth
-SearchY2 := 130
+; Search logic: first search the full screen. Once a buff is found,
+; remember its position; later searches look nearby first (within
+; 100 pixels up and down) and fall back to a full-screen search if
+; not found nearby.
 
 ; Buff order: 0007, 0005, 0020, 0001, 0030
 BuffText := [
@@ -133,13 +124,13 @@ ScanPass(err, label) {
 ; Search buff i: nearby first if its position is remembered, else full screen.
 ; On success, remember the position and return true.
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, MemX, MemY, NearR, FoundNear, SearchX1, SearchY1, SearchX2, SearchY2
+    global BuffText, MemX, MemY, NearR, FoundNear
     FoundNear := false
     if (MemX[i] >= 0) {
-        x1 := Max(MemX[i] - NearR, SearchX1)
-        y1 := Max(MemY[i] - NearR, SearchY1)
-        x2 := Min(MemX[i] + NearR, SearchX2)
-        y2 := Min(MemY[i] + NearR, SearchY2)
+        x1 := Max(MemX[i] - NearR, 0)
+        y1 := Max(MemY[i] - NearR, 0)
+        x2 := Min(MemX[i] + NearR, A_ScreenWidth)
+        y2 := Min(MemY[i] + NearR, A_ScreenHeight)
         if (TryFind(BuffText[i], x1, y1, x2, y2, err, &fx, &fy)) {
             MemX[i] := fx
             MemY[i] := fy
@@ -147,7 +138,7 @@ FindBuff(i, err, &fx, &fy) {
             return true
         }
     }
-    if (TryFind(BuffText[i], SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
+    if (TryFind(BuffText[i], 0, 0, A_ScreenWidth, A_ScreenHeight, err, &fx, &fy)) {
         MemX[i] := fx
         MemY[i] := fy
         return true
