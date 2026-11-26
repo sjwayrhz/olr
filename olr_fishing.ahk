@@ -9,9 +9,7 @@
 ; Fishing watches the full screen for the 5 buff icons. Once a buff is
 ; found, its position is remembered; later searches look nearby first
 ; (faster) and fall back to a full-screen search if not found nearby.
-; Each scan runs two passes: a tight pass (tolerance 0.1) over all 5
-; buffs first, then a loose pass (0.2). A buff that matches tightly
-; wins over one that only matches loosely, whatever the scan order.
+; Each scan runs one pass over all 5 buffs at tolerance 0.1.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -37,7 +35,6 @@ global FishingOn := false
 global FoundNear := false
 
 BuffErrTight := 0.1
-BuffErrLoose := 0.2
 ScanMs := 400
 NearR := 70
 
@@ -97,14 +94,11 @@ HideTip() {
 }
 
 FishTimer() {
-    global MasterOn, FishingOn, BuffErrTight, BuffErrLoose
+    global MasterOn, FishingOn, BuffErrTight
     if (!MasterOn || !FishingOn) {
         return
     }
-    if (ScanPass(BuffErrTight, "tight")) {
-        return
-    }
-    ScanPass(BuffErrLoose, "loose")
+    ScanPass(BuffErrTight, "tight")
 }
 
 ; One scan pass over all 5 buffs at the given tolerance.
