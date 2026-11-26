@@ -39,6 +39,13 @@ BuffErrTight := 0.05
 ScanMs := 400
 NearR := 100
 
+; Known false-positive spots: dark patches of game world that match a
+; buff pattern even though no buff is there. (36,339) is a dark patch
+; on the left edge that keeps matching Buff0007. Matches near these
+; spots are ignored and never remembered.
+BadSpots := [[36, 339]]
+BadSpotR := 50
+
 ; Search logic: first search the full screen. Once a buff is found,
 ; remember its position; later searches look nearby first (within
 ; 100 pixels up and down) and fall back to a full-screen search if
@@ -154,9 +161,24 @@ TryFind(text, x1, y1, x2, y2, err, &fx, &fy) {
     if (!IsObject(matches) || matches.Length = 0) {
         return false
     }
-    fx := matches[1].mx
-    fy := matches[1].my
-    return true
+    for _, m in matches {
+        if (!IsNearBadSpot(m.mx, m.my)) {
+            fx := m.mx
+            fy := m.my
+            return true
+        }
+    }
+    return false
+}
+
+IsNearBadSpot(x, y) {
+    global BadSpots, BadSpotR
+    for _, s in BadSpots {
+        if (Abs(x - s[1]) <= BadSpotR && Abs(y - s[2]) <= BadSpotR) {
+            return true
+        }
+    }
+    return false
 }
 
 LogAction(i, fx, fy, label) {
