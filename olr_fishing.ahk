@@ -162,8 +162,7 @@ TryFind(text, x1, y1, x2, y2, err, &fx, &fy) {
 LogAction(i, fx, fy, label) {
     global BuffName, BuffKey, FoundNear
     where := FoundNear ? "near" : "full"
-    line := FormatTime(, "yyyy-MM-dd HH:mm:ss") " " BuffName[i] " -> " BuffKey[i]
-        " at " fx "," fy " " where " " label "`n"
+    line := FormatTime(, "yyyy-MM-dd HH:mm:ss") " " BuffName[i] " -> " BuffKey[i] " at " fx "," fy " " where " " label "`n"
     try FileAppend(line, A_ScriptDir "\olr_fishing_log.txt")
 }
 
