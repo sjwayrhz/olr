@@ -37,7 +37,7 @@ global FishingOn := false
 global FoundNear := false
 
 BuffErrTight := 0.1
-ScanMs := 400
+ScanMs := 100
 NearR := 100
 
 ; Known false-positive spots: dark patches of game world that match a
