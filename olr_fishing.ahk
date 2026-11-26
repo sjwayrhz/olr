@@ -9,7 +9,7 @@
 ; Fishing watches the full screen for the 5 buff icons. Once a buff is
 ; found, its position is remembered; later searches look nearby first
 ; (faster) and fall back to a full-screen search if not found nearby.
-; Each scan runs one pass over all 5 buffs at tolerance 0.1.
+; Each scan runs one pass over all 5 buffs at tolerance 0.05.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -34,7 +34,7 @@ global MasterOn := true
 global FishingOn := false
 global FoundNear := false
 
-BuffErrTight := 0.1
+BuffErrTight := 0.05
 ScanMs := 400
 NearR := 70
 
