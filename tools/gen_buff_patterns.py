@@ -85,16 +85,20 @@ for name in NAMES:
 
 print()
 print('Pairwise separation (per-class err, both directions; safe if max > 0.2):')
+print('(pairs of different sizes cannot match each other in FindText, skipped)')
 worst = 0.0
 for i in range(len(NAMES)):
     for j in range(i + 1, len(NAMES)):
         a, b = NAMES[i], NAMES[j]
+        if len(bms[a]) != len(bms[b]) or len(bms[a][0]) != len(bms[b][0]):
+            print(f'  {a} vs {b}: different sizes, skipped')
+            continue
         e1, e0 = per_class_err(bms[a], bms[b])
         f1, f0 = per_class_err(bms[b], bms[a])
         m = max(e1, e0, f1, f0)
         worst = max(worst, m)
         print(f'  {a} vs {b}: err1={e1:.3f}/{f1:.3f} err0={e0:.3f}/{f0:.3f} max={m:.3f}')
-print(f'  worst pair max err: {worst:.3f} (tolerance 0.2)')
+print(f'  worst same-size pair max err: {worst:.3f} (tolerance 0.2)')
 
 print()
 print('AHK lines (paste into olr_fishing.ahk):')

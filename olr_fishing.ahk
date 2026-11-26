@@ -9,7 +9,7 @@
 ; Fishing watches the full screen for the 5 buff icons. Once a buff is
 ; found, its position is remembered; later searches look nearby first
 ; (faster) and fall back to a full-screen search if not found nearby.
-; Each scan runs one pass over all 5 buffs at tolerance 0.1.
+; Each scan runs one pass over all 5 buffs at tolerance 0 (exact match only).
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -34,7 +34,7 @@ global MasterOn := true
 global FishingOn := false
 global FoundNear := false
 
-BuffErrTight := 0.1
+BuffErrTight := 0
 ScanMs := 400
 NearR := 70
 
@@ -43,7 +43,7 @@ BuffText := [
     "|<Buff0007>*180$32.zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzxzzzzzzzzzzzzzzTzzzzjzzzztzzzzzTzzzzvzzzzbTzzztzzzzxTbzzyrrzzzUxzzzzTbzzjrxzzzxwzzzjzzzyzzzzzDyTzzrs7zzxyDzzzzjzzzzzzzzzjzzzzzzzzzzzzzzzzzzzy"
     , "|<Buff0005>*180$32.zzzzzzzzzzznzzzzs3zzzw0Lzzz7lzzzlzzTzwSytzz7bvxzlwzzDwDHzvz3zDzbyTzzxznZzzzzxjzzzxTbzzyrrzzzUxzznzTbzyzrxzzbxwzzznzzzzkjzzzztzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzy"
     , "|<Buff0020>*180$32.zzzzzzzzzzrzzzzzzzzzzzzzzzzyzzzzzzzzzzzzzzzzzvzzzzzDzzzzbzzzzvzzzzxzzzzazzzzxTzzzxTbzzyrrzzzUxzzzzTbzzzrxxzzxwvzzzzzTzzzzzTzzxznzzr1yzzzwTjzzzrzzzzzzzzzzzzzzzzzzzzzzzzzzzy"
-    , "|<Buff0001>*180$32.zzzzzzzzzzzzzzzzzzwrzzzjyzzzzzlzzztyTzzznnzzzvSzzzwPbzzzjRzzzzrTzzzxvzzazyzzxTrjzxLztzyrrzDzUxzvzzTbzzzrxtzxxxzDzzzzzzzzzzzzzzzzzzznzzzzzzzzzzzrzzzzzzzzzzzzzzzzzzzzzzzzzzy"
+    , "|<Buff0001>*180$40.zzzzzzzzzzzzzzTzzzxzxtzzz0znjzzzrz6vO7yTxPhhjtzKiqqzjzMvPOyzxnhhBqTriKovRxzzzzzrzzzzzDTzzzzzyzzzzzvvzzzvzbzzzzzyzzzzzzvzzzzbzjzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzTzzzzzwzzzzzztzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzy"
     , "|<Buff0030>*180$32.zzzzzzzzzzzzzzzzzzzzzzvzzzzzzzzzzDzzzzvzzzzw7zzzzDzzzzvzzzzzTzzzzzzzzzzbzzzztzzzzxTbzzyrrzzzUxzzzzTbzzzrxzzzxwzzzzzzzw0TzzzA7zzrztzvyyTzyzDxzzb3zzzzkzzzzzTzzzzvzzzzzzzzzzy"
 ]
 BuffName := ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
