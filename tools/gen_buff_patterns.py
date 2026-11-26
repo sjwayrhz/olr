@@ -1,6 +1,6 @@
 """Generate FindText patterns for the 5 fishing buff icons (olr project).
 
-Sources: ~/workspace/user/files/buff-4s-2026-11-26/buff4s_*.png
+Sources: ~/workspace/olr/images/buff_num*.png
 (32x32 crops from her screenshots, 2026-11-26).
 
 Method: same encoder as fenix gen_recycle_patterns.py.
@@ -10,7 +10,7 @@ the live icons were often missed. At 120 the worst-pair separation is
 the threshold) is 567 vs 572 at 140, and bright counts are 311-519
 (more white features, clearer shapes). At 180 the patterns were 89-95%
 dark (only 53-111 bright pixels), so a dark patch of game world with a
-few bright speckles matched them and Buff0007 kept false-firing at
+few bright speckles matched them and buff_num4 kept false-firing at
 (36,339). At 120 the patterns are 30-51% bright, much harder for a
 dark patch to match, while the worst pair separation is still far
 above the 0.1 tolerance.
@@ -71,13 +71,13 @@ def per_class_err(pat, img):
              if pat[y][x] == 0 and img[y][x] == 1) / max(zeros, 1)
     return e1, e0
 
-NAMES = ['Buff0001', 'Buff0005', 'Buff0020', 'Buff0007', 'Buff0030']
+NAMES = ['buff_num4', 'buff_num5', 'buff_num6', 'buff_num7', 'buff_num8']
 FILES = {
-    'Buff0001': 'buff4s_0001.png',
-    'Buff0005': 'buff4s_0005.png',
-    'Buff0020': 'buff4s_0020.png',
-    'Buff0007': 'buff4s_0007.png',
-    'Buff0030': 'buff4s_0030.png',
+    'buff_num4': 'buff_num4.png',
+    'buff_num5': 'buff_num5.png',
+    'buff_num6': 'buff_num6.png',
+    'buff_num7': 'buff_num7.png',
+    'buff_num8': 'buff_num8.png',
 }
 BASE = '/home/hatch/workspace/olr/images/'
 

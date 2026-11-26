@@ -6,8 +6,7 @@ a single dropped character breaks the pattern (189 vs 190 chars, 2026-11-26).
 Two rules this script enforces (both were broken by the first version):
 1. BuffText order MUST match BuffName/BuffKey/BuffSpace/BuffRest:
    buff_num4, buff_num5, buff_num6, buff_num7, buff_num8
-   (the generator emits them by screenshot file: 0007, 0005, 0020,
-   0001, 0030, and GEN_TO_DISPLAY below maps each to its key).
+   (the generator emits them in that order).
 2. The FIRST element must NOT have a leading comma. In AHK v2 a leading
    comma before the first element creates an empty BuffText[1], and
    FindBuff(1) then throws "Item has no value. Specifically: 1".
@@ -21,15 +20,7 @@ import sys
 
 AHK = "/home/hatch/workspace/olr/olr_fishing.ahk"
 GEN = "/home/hatch/workspace/olr/tools/gen_buff_patterns.py"
-# Generator names (from screenshot files) -> display names (by numpad key).
 # Canonical order, must match BuffName in olr_fishing.ahk.
-GEN_TO_DISPLAY = {
-    "Buff0007": "buff_num4",
-    "Buff0005": "buff_num5",
-    "Buff0020": "buff_num6",
-    "Buff0001": "buff_num7",
-    "Buff0030": "buff_num8",
-}
 ORDER = ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 
 out = subprocess.run([sys.executable, GEN], capture_output=True, text=True, check=True).stdout
@@ -44,15 +35,10 @@ by_name = {}
 for ln in gen_lines:
     mm = re.search(r'"\|<(\w+)>\*', ln)
     assert mm, f"cannot parse buff name from: {ln[:50]}"
-    gen_name = mm.group(1)
-    assert gen_name in GEN_TO_DISPLAY, f"unknown generator name {gen_name}"
-    disp = GEN_TO_DISPLAY[gen_name]
     # strip leading comma and surrounding quotes/spaces
     pat = ln.lstrip(", ").strip()
     assert pat.startswith('"') and pat.endswith('"'), f"bad line: {ln[:50]}"
-    # rewrite the pattern label to the display name (buff_num4, ...)
-    pat = pat.replace(f"|<{gen_name}>", f"|<{disp}>", 1)
-    by_name[disp] = pat
+    by_name[mm.group(1)] = pat
 assert set(by_name) == set(ORDER), f"generator names {sorted(by_name)} != order {ORDER}"
 
 # Emit in canonical order: first line no leading comma, rest with one.
