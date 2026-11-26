@@ -3,10 +3,10 @@
 ;
 ; SC029 (` key, top-left under Esc) : toggle the whole script on / off
 ; Fishing mode is automatic: every 500 ms the script looks for the
-; fish HP bar (blood bar) in the top strip; finding it enters fishing
-; mode, losing it leaves fishing mode. Each change shows a tooltip
-; at the mouse cursor for 2 seconds, then it disappears (it does not
-; stay at the cursor).
+; blue bar (blood bar) in its rectangle (680,124)-(850,241); finding
+; it enters fishing mode, losing it leaves fishing mode. Each change
+; shows a tooltip at the mouse cursor for 2 seconds, then it
+; disappears (it does not stay at the cursor).
 ;
 ; Fishing searches the top strip (x 518-1165, y 0-392) for the 5 buff
 ; icons. Four timers fire every 10 ms, staggered ~2.5 ms apart, so a
@@ -37,11 +37,12 @@
 ; them look alike: at T=120 the worst pair (num4 vs num8, both orange
 ; arrows) separates by only 0.270, below the 0.3 tolerance. T=80 is
 ; the best threshold for this set: worst pair separates by 0.333,
-; above 0.3, with fragility similar to T=120. Note the orange-arrow
-; buffs num4/num6/num8 stay close (num8 pattern vs num4 image is
-; 0.266); the loop checks num4 before num8, so a num4 icon is read
-; as num4 first. Keep the tolerance at 0.3 -- do not raise it, or
-; num4/num6/num8 will be confused.
+; above 0.3, with fragility similar to T=120. The orange-arrow buffs
+; num4/num6/num8 stay close (num8 pattern vs num4 image is 0.266),
+; but every tolerance is now 0.2 or lower, well under 0.266, so a
+; num4 icon is not read as num8 even though the loop checks num8
+; first. Keep every tolerance at or below 0.2 -- do not raise them,
+; or num4/num6/num8 will be confused.
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
@@ -71,7 +72,7 @@ global BoostNext := false
 ; so each one's pattern also matched the other's icon (num7 read as
 ; num5). With the current T=80 patterns the worst pair (num4 vs
 ; num8) only separates by 0.333, so keep every number at or below
-; 0.3.
+; 0.2.
 ErrNum4 := 0.1
 ErrNum5 := 0.2
 ErrNum6 := 0.1
@@ -97,9 +98,9 @@ SearchY2 := 392
 BadSpots := [[36, 339]]
 BadSpotR := 50
 
-; Search logic: first search the full screen. Once a buff is found,
+; Search logic: first search the top strip. Once a buff is found,
 ; remember its position; later searches look nearby first (within
-; 100 pixels up and down) and fall back to a full-screen search if
+; 100 pixels up and down) and fall back to a top-strip search if
 ; not found nearby.
 
 ; Buff order: num4, num5, num6, num7, num8
@@ -127,10 +128,12 @@ BloodY2 := 241
 ; (replaced 2026-11-27: the old one was a 49x15 red HP bar, this one
 ; is the blue bar right under it). The bar is a blue gradient (gray
 ; 119-137), so T=125 gives a perfect dark/bright split (193 dark,
-; 191 bright). Found in the same top strip as the buffs; when it
-; appears, fishing has started and the script enters fishing mode.
-; Verified against her 5 screenshots: matches at (590-592, 58) with
-; max err 0.057-0.093, well inside the 0.2 tolerance.
+; 191 bright). Searched in its own rectangle (680,124)-(850,241),
+; not the buff strip. Verified against her 5 old screenshots: the
+; pattern matches the blue bar at (590-592, 58) with max err
+; 0.057-0.093, well inside the 0.2 tolerance -- but that spot is
+; outside the new rectangle, so the rectangle is her measured
+; position on the current screen, not the old screenshots.
 BloodText := "|<buff_blood>*125$32.0000000000000M1z07zzzk1zzzw0zzzz0Tzzzk7zzzw0zzzz00zzzk0Dzzw00000U"
 BloodErr := 0.2
 ; Rest times: only two numbers to change. Short rest follows the
