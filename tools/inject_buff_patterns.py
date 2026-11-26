@@ -2,6 +2,15 @@
 """Inject freshly generated FindText patterns (from gen_buff_patterns.py)
 into olr_fishing.ahk programmatically. Never hand-copy pattern strings:
 a single dropped character breaks the pattern (189 vs 190 chars, 2026-11-26).
+
+Two rules this script enforces (both were broken by the first version):
+1. BuffText order MUST match BuffName/BuffKey/BuffSpace/BuffRest:
+   0007, 0005, 0020, 0001, 0030 (the generator emits 0001 first).
+2. The FIRST element must NOT have a leading comma. In AHK v2 a leading
+   comma before the first element creates an empty BuffText[1], and
+   FindBuff(1) then throws "Item has no value. Specifically: 1".
+   Format: first line `    "..."`, later lines `    , "..."`.
+
 Verifies each injected line matches the generator output exactly.
 """
 import re
@@ -10,20 +19,35 @@ import sys
 
 AHK = "/home/hatch/workspace/olr/olr_fishing.ahk"
 GEN = "/home/hatch/workspace/olr/tools/gen_buff_patterns.py"
+# Canonical order, must match BuffName := ["Buff0007", "Buff0005",
+# "Buff0020", "Buff0001", "Buff0030"] in olr_fishing.ahk.
+ORDER = ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
 
 out = subprocess.run([sys.executable, GEN], capture_output=True, text=True, check=True).stdout
-# Extract the AHK block: from 'BuffText := [' to the closing ']'
 m = re.search(r"BuffText := \[\n(.*?)\n\]", out, re.S)
 if not m:
     raise SystemExit("generator output has no BuffText block")
-new_block_inner = m.group(1)
-new_lines = [ln for ln in new_block_inner.splitlines() if ln.strip()]
-assert len(new_lines) == 5, f"expected 5 pattern lines, got {len(new_lines)}"
-for ln in new_lines:
-    assert ln.strip().startswith(', "|<Buff'), f"unexpected line: {ln[:40]}"
+gen_lines = [ln.strip() for ln in m.group(1).splitlines() if ln.strip()]
+assert len(gen_lines) == 5, f"expected 5 pattern lines, got {len(gen_lines)}"
+
+# Map buff name -> the pattern string (without leading comma/quote handling).
+by_name = {}
+for ln in gen_lines:
+    mm = re.search(r'"\|<(\w+)>\*', ln)
+    assert mm, f"cannot parse buff name from: {ln[:50]}"
+    # strip leading comma and surrounding quotes/spaces
+    pat = ln.lstrip(", ").strip()
+    assert pat.startswith('"') and pat.endswith('"'), f"bad line: {ln[:50]}"
+    by_name[mm.group(1)] = pat
+assert set(by_name) == set(ORDER), f"generator names {sorted(by_name)} != order {ORDER}"
+
+# Emit in canonical order: first line no leading comma, rest with one.
+new_lines = []
+for idx, name in enumerate(ORDER):
+    pat = by_name[name]
+    new_lines.append(('    ' if idx == 0 else '    , ') + pat)
 
 src = open(AHK, encoding="utf-8-sig").read()
-# Replace the BuffText array (from 'BuffText := [' to the first ']' after it)
 m2 = re.search(r"BuffText := \[\n.*?\n\]", src, re.S)
 if not m2:
     raise SystemExit("olr_fishing.ahk has no BuffText block")
@@ -31,14 +55,17 @@ new_block = "BuffText := [\n" + "\n".join(new_lines) + "\n]"
 src2 = src[:m2.start()] + new_block + src[m2.end():]
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src2)
 
-# Verify: re-read and confirm each pattern line is byte-identical to generator output
+# Verify: re-read, confirm order + exact match + first line has no leading comma.
 after = open(AHK, encoding="utf-8-sig").read()
 m3 = re.search(r"BuffText := \[\n(.*?)\n\]", after, re.S)
 got = [ln for ln in m3.group(1).splitlines() if ln.strip()]
-assert got == new_lines, "injected patterns do not match generator output"
-for ln in got:
-    # threshold must be *120 now
+assert got == new_lines, "injected patterns do not match expected block"
+assert got[0].lstrip().startswith('"'), "first element must not have a leading comma"
+assert all(ln.lstrip().startswith(', "') for ln in got[1:]), "later elements need a leading comma"
+for name, ln in zip(ORDER, got):
+    assert f"|<{name}>" in ln, f"line {ln[:40]} is not {name}"
     assert "*120$" in ln, f"wrong threshold in line: {ln[:50]}"
-print("injected 5 patterns at T=120, verified byte-identical to generator output")
+print("injected 5 patterns at T=120 in canonical order (0007,0005,0020,0001,0030),")
+print("first element has no leading comma; verified byte-identical to generator output")
 for ln in got:
     print(" ", ln[:60], "... len", len(ln))
