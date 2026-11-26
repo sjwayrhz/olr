@@ -10,7 +10,7 @@
 ; is found, its position is remembered; later searches look nearby
 ; first (within 100 pixels up and down) and fall back to a full-screen
 ; search if not found nearby.
-; Each scan runs one pass over all 5 buffs at tolerance 0.05.
+; Each scan runs one pass over all 5 buffs at tolerance 0.1.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -26,7 +26,7 @@
 ; patch of game world kept false-matching Buff0007 at (36,339).
 ; At 140 the patterns are 61-74% dark (264-401 bright pixels), much
 ; harder for a dark patch to match, and the worst pair still
-; separates by 0.318, far above the 0.05 tolerance.
+; separates by 0.318, far above the 0.1 tolerance.
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
@@ -36,7 +36,7 @@ global MasterOn := true
 global FishingOn := false
 global FoundNear := false
 
-BuffErrTight := 0.05
+BuffErrTight := 0.1
 ScanMs := 400
 NearR := 100
 
