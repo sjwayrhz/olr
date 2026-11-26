@@ -6,10 +6,11 @@
 ; Each toggle shows a tooltip at the mouse cursor for 2 seconds, then it
 ; disappears (it does not stay at the cursor).
 ;
-; Fishing watches the right side of the screen for the 5 buff icons
-; (the panel only appears there). Once a buff is found, its position
-; is remembered; later searches look nearby first (faster) and fall
-; back to a search of the right side if not found nearby.
+; Fishing watches the buff bar at the top of the screen for the 5 buff
+; icons. Once a buff is found, its position is remembered; later
+; searches look nearby first (faster) and fall back to a search of the
+; top strip if not found nearby. The fishing panel (right side) is
+; never searched: its icons are different and would only confuse it.
 ; Each scan runs one pass over all 5 buffs at tolerance 0.05.
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
@@ -39,14 +40,15 @@ BuffErrTight := 0.05
 ScanMs := 400
 NearR := 70
 
-; Fishing panel only ever appears on the right side of the screen.
-; (36,339) is a dark patch on the left that falsely matches Buff0007
-; (its pattern is 95% dark, only 53 bright pixels), so the search is
-; restricted to the right side and that spot is never searched.
-SearchX1 := 900
-SearchY1 := 300
+; The buffs live in the buff bar at the top of the screen (y~76-108).
+; The fishing panel (right side, y 300+) shows different, bigger icons
+; and must NOT be detected, so the search is restricted to the top
+; strip. This also excludes the dark patch at (36,339) that falsely
+; matched Buff0007.
+SearchX1 := 0
+SearchY1 := 0
 SearchX2 := A_ScreenWidth
-SearchY2 := A_ScreenHeight
+SearchY2 := 200
 
 ; Buff order: 0007, 0005, 0020, 0001, 0030
 BuffText := [
