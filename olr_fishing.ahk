@@ -91,13 +91,27 @@ SetTimer(StartFishTimer2, -2)
 SetTimer(StartFishTimer3, -5)
 SetTimer(StartFishTimer4, -7)
 
-FishTimer1() { FishTimer() }
-FishTimer2() { FishTimer() }
-FishTimer3() { FishTimer() }
-FishTimer4() { FishTimer() }
-StartFishTimer2() { SetTimer(FishTimer2, ScanMs) }
-StartFishTimer3() { SetTimer(FishTimer3, ScanMs) }
-StartFishTimer4() { SetTimer(FishTimer4, ScanMs) }
+FishTimer1() {
+    FishTimer()
+}
+FishTimer2() {
+    FishTimer()
+}
+FishTimer3() {
+    FishTimer()
+}
+FishTimer4() {
+    FishTimer()
+}
+StartFishTimer2() {
+    SetTimer(FishTimer2, ScanMs)
+}
+StartFishTimer3() {
+    SetTimer(FishTimer3, ScanMs)
+}
+StartFishTimer4() {
+    SetTimer(FishTimer4, ScanMs)
+}
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
