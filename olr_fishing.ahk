@@ -13,7 +13,8 @@
 ; later searches look nearby first (within 100 pixels up and down) and
 ; fall back to the top strip if not found nearby.
 ; Each scan runs one pass over all 5 buffs, each at its own tolerance
-; (BuffErr[i]; num4/num5/num6 use 0.2, num7/num8 use 0.3).
+; (BuffErr[i]; one number per buff: 0.1 num4, 0.3 num5, 0.1 num6,
+; 0.2 num7, 0.2 num8).
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -54,19 +55,28 @@ global Scanning := false
 ; (num4/5/6): while resting, only the high-priority buffs (num7/num8)
 ; are looked for, and finding one interrupts the rest at once. The
 ; buff just acted on (RestBuff) is still on screen during its rest.
+; BoostNext: after pressing num7/num8, the next action (whatever buff
+; it is) is high priority and may interrupt the rest. Once that next
+; action is a num4/5/6, the boost is used up and normal priority
+; rules apply again.
 global RestUntil := 0
 global RestBuff := 0
+global BoostNext := false
 
-; Tolerance per buff. num4/num5/num6 use ErrTight (0.1), num7/num8
-; use ErrLoose (0.2). Only two numbers to change here.
-; 2026-11-26: ErrLoose was tried at 0.4 and reverted the same night:
-; 0.4 is above the 0.387 separation between num5 and num7, so each
-; one's pattern also matched the other's icon (num7 read as num5).
-; With the current T=80 patterns the worst pair (num4 vs num8) only
-; separates by 0.333, so keep both numbers at or below 0.2.
-ErrTight := 0.1
-ErrLoose := 0.2
-BuffErr := [ErrTight, ErrTight, ErrTight, ErrLoose, ErrLoose]
+; Tolerance per buff, one number per key (no groups). num5 is 0.3
+; (it was hard to recognise at 0.1); the others keep their values.
+; 2026-11-26: a tolerance of 0.4 was tried and reverted the same
+; night: 0.4 is above the 0.387 separation between num5 and num7,
+; so each one's pattern also matched the other's icon (num7 read as
+; num5). With the current T=80 patterns the worst pair (num4 vs
+; num8) only separates by 0.333, so keep every number at or below
+; 0.3.
+ErrNum4 := 0.1
+ErrNum5 := 0.3
+ErrNum6 := 0.1
+ErrNum7 := 0.2
+ErrNum8 := 0.2
+BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
 ScanMs := 10
 NearR := 100
 
@@ -145,11 +155,12 @@ StartFishTimer4() {
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
-    global MasterOn, FishingOn, RestUntil
+    global MasterOn, FishingOn, RestUntil, BoostNext
     MasterOn := !MasterOn
     if (!MasterOn) {
         FishingOn := false
         RestUntil := 0
+        BoostNext := false
         ShowTip("脚本已暂停")
     } else {
         ShowTip("脚本已开启")
@@ -158,7 +169,7 @@ SC029:: {
 
 ; F5 toggles fishing (only while the script is running).
 F5:: {
-    global MasterOn, FishingOn, RestUntil
+    global MasterOn, FishingOn, RestUntil, BoostNext
     if (!MasterOn) {
         return
     }
@@ -167,6 +178,7 @@ F5:: {
         ShowTip("钓鱼功能开启")
     } else {
         RestUntil := 0
+        BoostNext := false
         ShowTip("钓鱼功能关闭")
     }
 }
@@ -193,7 +205,7 @@ FishTimer() {
 }
 
 ; One scan pass over all 5 buffs, each at its own tolerance
-; (BuffErr[i]: 0.1 for num4/num5/num6, 0.2 for num7/num8).
+; (BuffErr[i]: 0.1 num4, 0.3 num5, 0.1 num6, 0.2 num7, 0.2 num8).
 ; Acts on the first match and returns true.
 ; Priority: num7 and num8 are high priority and are checked first;
 ; num4/num5/num6 are low priority and are checked after them.
@@ -201,11 +213,13 @@ FishTimer() {
 ; acting on a low-priority buff. A high-priority buff (num7/num8)
 ; found during the rest interrupts it at once and is acted on
 ; immediately; the low-priority ones never interrupt, so the rest
-; is a real wait for them. (Before 2026-11-27 every buff interrupted
-; the rest, so when buffs appeared in quick succession the script
-; never actually waited -- that is why the rest seemed broken.)
+; is a real wait for them. Exception: right after pressing num7/num8
+; the next action (whatever buff it is) is high priority too
+; (BoostNext) -- once that action is a num4/5/6 the boost is used
+; up and normal priority rules apply again. The buff just acted on
+; (RestBuff) is never re-pressed during its own rest.
 ScanPass(label) {
-    global BuffText, BuffErr, RestUntil, RestBuff
+    global BuffText, BuffErr, RestUntil, RestBuff, BoostNext
     if (RestUntil > 0 && A_TickCount >= RestUntil) {
         RestUntil := 0
     }
@@ -214,9 +228,13 @@ ScanPass(label) {
     ; 3=num6, 4=num7, 5=num8. So check 4,5 (num7,num8) before 1,2,3.
     order := [4, 5, 1, 2, 3]
     for _, i in order {
-        ; Low-priority buffs (indices 1,2,3 = num4/5/6) never
-        ; interrupt a rest.
-        if (resting && i <= 3) {
+        ; Never re-press the buff just acted on during its rest.
+        if (resting && i = RestBuff) {
+            continue
+        }
+        ; Low-priority buffs (indices 1,2,3 = num4/5/6) only interrupt
+        ; a rest while the boost from num7/num8 is still on.
+        if (resting && i <= 3 && !BoostNext) {
             continue
         }
         if (FindBuff(i, BuffErr[i], &fx, &fy)) {
@@ -290,7 +308,7 @@ LogAction(i, fx, fy, label) {
 }
 
 DoBuffAction(i) {
-    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, RestBuff
+    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, RestBuff, BoostNext
     Send("{" BuffKey[i] "}")
     if (BuffSpace[i]) {
         Sleep(2000)
@@ -304,4 +322,12 @@ DoBuffAction(i) {
     ; rest after the rest-only buffs (num7/num8).
     RestBuff := i
     RestUntil := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
+    ; Pressing num7/num8 (indices 4,5) boosts the NEXT action to high
+    ; priority, whatever buff it is. Pressing a num4/5/6 (indices
+    ; 1,2,3) uses the boost up and restores normal priority rules.
+    if (i >= 4) {
+        BoostNext := true
+    } else {
+        BoostNext := false
+    }
 }
