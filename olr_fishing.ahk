@@ -15,8 +15,8 @@
 ; later searches look nearby first (within 100 pixels up and down) and
 ; fall back to the top strip if not found nearby.
 ; Each scan runs one pass over all 5 buffs, each at its own tolerance
-; (BuffErr[i]; one number per buff: 0.1 num4, 0.3 num5, 0.1 num6,
-; 0.2 num7, 0.2 num8).
+; (BuffErr[i]; one number per buff: 0.1 num4, 0.2 num5, 0.1 num6,
+; 0.1 num7, 0.1 num8).
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
@@ -65,8 +65,7 @@ global RestUntil := 0
 global RestBuff := 0
 global BoostNext := false
 
-; Tolerance per buff, one number per key (no groups). num5 is 0.3
-; (it was hard to recognise at 0.1); the others keep their values.
+; Tolerance per buff, one number per key (no groups). num5 is 0.2.
 ; 2026-11-26: a tolerance of 0.4 was tried and reverted the same
 ; night: 0.4 is above the 0.387 separation between num5 and num7,
 ; so each one's pattern also matched the other's icon (num7 read as
@@ -74,10 +73,10 @@ global BoostNext := false
 ; num8) only separates by 0.333, so keep every number at or below
 ; 0.3.
 ErrNum4 := 0.1
-ErrNum5 := 0.3
+ErrNum5 := 0.2
 ErrNum6 := 0.1
-ErrNum7 := 0.2
-ErrNum8 := 0.2
+ErrNum7 := 0.1
+ErrNum8 := 0.1
 BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
 ScanMs := 10
 NearR := 100
@@ -231,7 +230,7 @@ FishTimer() {
 }
 
 ; One scan pass over all 5 buffs, each at its own tolerance
-; (BuffErr[i]: 0.1 num4, 0.3 num5, 0.1 num6, 0.2 num7, 0.2 num8).
+; (BuffErr[i]: 0.1 num4, 0.2 num5, 0.1 num6, 0.1 num7, 0.1 num8).
 ; Acts on the first match and returns true.
 ; Priority: num7 and num8 are high priority and are checked first;
 ; num4/num5/num6 are low priority and are checked after them.
