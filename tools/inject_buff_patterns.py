@@ -5,7 +5,9 @@ a single dropped character breaks the pattern (189 vs 190 chars, 2026-11-26).
 
 Two rules this script enforces (both were broken by the first version):
 1. BuffText order MUST match BuffName/BuffKey/BuffSpace/BuffRest:
-   0007, 0005, 0020, 0001, 0030 (the generator emits 0001 first).
+   buff_num4, buff_num5, buff_num6, buff_num7, buff_num8
+   (the generator emits them by screenshot file: 0007, 0005, 0020,
+   0001, 0030, and GEN_TO_DISPLAY below maps each to its key).
 2. The FIRST element must NOT have a leading comma. In AHK v2 a leading
    comma before the first element creates an empty BuffText[1], and
    FindBuff(1) then throws "Item has no value. Specifically: 1".
@@ -19,9 +21,16 @@ import sys
 
 AHK = "/home/hatch/workspace/olr/olr_fishing.ahk"
 GEN = "/home/hatch/workspace/olr/tools/gen_buff_patterns.py"
-# Canonical order, must match BuffName := ["Buff0007", "Buff0005",
-# "Buff0020", "Buff0001", "Buff0030"] in olr_fishing.ahk.
-ORDER = ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
+# Generator names (from screenshot files) -> display names (by numpad key).
+# Canonical order, must match BuffName in olr_fishing.ahk.
+GEN_TO_DISPLAY = {
+    "Buff0007": "buff_num4",
+    "Buff0005": "buff_num5",
+    "Buff0020": "buff_num6",
+    "Buff0001": "buff_num7",
+    "Buff0030": "buff_num8",
+}
+ORDER = ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 
 out = subprocess.run([sys.executable, GEN], capture_output=True, text=True, check=True).stdout
 m = re.search(r"BuffText := \[\n(.*?)\n\]", out, re.S)
@@ -35,10 +44,15 @@ by_name = {}
 for ln in gen_lines:
     mm = re.search(r'"\|<(\w+)>\*', ln)
     assert mm, f"cannot parse buff name from: {ln[:50]}"
+    gen_name = mm.group(1)
+    assert gen_name in GEN_TO_DISPLAY, f"unknown generator name {gen_name}"
+    disp = GEN_TO_DISPLAY[gen_name]
     # strip leading comma and surrounding quotes/spaces
     pat = ln.lstrip(", ").strip()
     assert pat.startswith('"') and pat.endswith('"'), f"bad line: {ln[:50]}"
-    by_name[mm.group(1)] = pat
+    # rewrite the pattern label to the display name (buff_num4, ...)
+    pat = pat.replace(f"|<{gen_name}>", f"|<{disp}>", 1)
+    by_name[disp] = pat
 assert set(by_name) == set(ORDER), f"generator names {sorted(by_name)} != order {ORDER}"
 
 # Emit in canonical order: first line no leading comma, rest with one.
@@ -65,7 +79,7 @@ assert all(ln.lstrip().startswith(', "') for ln in got[1:]), "later elements nee
 for name, ln in zip(ORDER, got):
     assert f"|<{name}>" in ln, f"line {ln[:40]} is not {name}"
     assert "*120$" in ln, f"wrong threshold in line: {ln[:50]}"
-print("injected 5 patterns at T=120 in canonical order (0007,0005,0020,0001,0030),")
+print("injected 5 patterns at T=120 in canonical order (buff_num4,buff_num5,buff_num6,buff_num7,buff_num8),")
 print("first element has no leading comma; verified byte-identical to generator output")
 for ln in got:
     print(" ", ln[:60], "... len", len(ln))

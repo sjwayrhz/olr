@@ -16,11 +16,11 @@
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
 ; Buff -> key (numpad keys, right side of the keyboard):
-;   buff4s_0007.png -> Numpad4, wait 2s, Space, rest 2.6s
-;   buff4s_0005.png -> Numpad5, wait 2s, Space, rest 2.6s
-;   buff4s_0020.png -> Numpad6, wait 2s, Space, rest 2.6s
-;   buff4s_0001.png -> Numpad7, rest 5.1s
-;   buff4s_0030.png -> Numpad8, rest 5.1s
+;   buff_num4 -> Numpad4, wait 2s, Space, rest 2.6s
+;   buff_num5 -> Numpad5, wait 2s, Space, rest 2.6s
+;   buff_num6 -> Numpad6, wait 2s, Space, rest 2.6s
+;   buff_num7 -> Numpad7, rest 5.1s
+;   buff_num8 -> Numpad8, rest 5.1s
 ; Rest does not stop scanning: a different buff found during a rest
 ; interrupts it at once; the buff just acted on is skipped during its
 ; own rest (it is still on screen).
@@ -28,7 +28,7 @@
 ; FindText patterns: threshold 120, generated from the 32x32 buff
 ; crops (tools/gen_buff_patterns.py). Threshold 180 was too dark: the
 ; patterns were 89-95% dark (only 53-111 bright pixels), so a dark
-; patch of game world kept false-matching Buff0007 at (36,339).
+; patch of game world kept false-matching buff_num4 at (36,339).
 ; At 140 the binarized icons looked blurry and live icons were often
 ; missed. At 120 the patterns are 49-70% dark (311-519 bright pixels),
 ; the shapes are clearer, and the worst pair still separates by
@@ -66,7 +66,7 @@ SearchY2 := 392
 
 ; Known false-positive spots: dark patches of game world that match a
 ; buff pattern even though no buff is there. (36,339) is a dark patch
-; on the left edge that keeps matching Buff0007. Matches near these
+; on the left edge that keeps matching buff_num4. Matches near these
 ; spots are ignored and never remembered.
 BadSpots := [[36, 339]]
 BadSpotR := 50
@@ -76,15 +76,15 @@ BadSpotR := 50
 ; 100 pixels up and down) and fall back to a full-screen search if
 ; not found nearby.
 
-; Buff order: 0007, 0005, 0020, 0001, 0030
+; Buff order: num4, num5, num6, num7, num8
 BuffText := [
-    "|<Buff0007>*120$32.zzzzzs00006zzzzxjzzzzPzzw7qzzzMxj1ztjPk0Dxqw07zxj07zvPk1zzqw7Dzxj3lzzPlYDzqyl7ztjxHbyPyrrzqz0wzxjzTbzPhqxzqnRwTxdjzzzOKPzzqBU7zxXk4TzNS3rzqjXrzxissvzP0wjzqUDDzxU0000Tzzzzy"
-    , "|<Buff0005>*120$32.zzzzzs0000600001U0003M0000q0k02BUz00NMQw00a73kk1UUDs0MA3z06177t5UTljMM1YfDq0FbvRURNbvM6rrra10wyxUTTbjM1rxxqUBwThi1vzzPk0DzqSU2DxXY01zPzXUDqzzqsljztzUPzwzzqzyTztU0000Tzzzzy"
-    , "|<Buff0020>*120$32.zzzzzs00006zzzzxjzzzzPsDzzqwPzzxjNzsDPjy03qzzU0xjzy0DPzzU3qzzk0xjzs0DPzY03qTl7lxbxHaTPyrrrqz0wxxjzTZzPzqxBqzxwPBjzzzNPzzyP6zzUbljzW0wPztsSazxr7pjxsxrPzw70qzzDs5U0000Tzzzzy"
-    , "|<Buff0001>*120$32.zzzzzs00006zy0zxjs00zPk1U7qy7T1xj70wDPX41XqnXGARXn0HbNdrC8qmztXBcjtYHOPaT4q7lDr5YxLYsPKrrT6n0wxtgzTa7P7rxkqlhwS5hDzztPFnzzqqDzzxhcT3CPv3lj6zPgL1jrkj3PztDrqzwTzxU0000Tzzzzy"
-    , "|<Buff0030>*120$32.zzzzzs00006zzzzxjszyDPtnzjqwzzrxj3xvzPVyBzqs71zxj1UTzPtk1zqyT0Txjzk3zPzY0zqzl7rxjxF7zPyrrzqz0wzxjzTazPzqxzqzxATxUDnz3M0M7yK03BzVXVztoMADyO68Lra1jdssUPzwjU6zyDs1U0000Tzzzzy"
+    "|<buff_num4>*120$32.zzzzzs00006zzzzxjzzzzPzzw7qzzzMxj1ztjPk0Dxqw07zxj07zvPk1zzqw7Dzxj3lzzPlYDzqyl7ztjxHbyPyrrzqz0wzxjzTbzPhqxzqnRwTxdjzzzOKPzzqBU7zxXk4TzNS3rzqjXrzxissvzP0wjzqUDDzxU0000Tzzzzy"
+    , "|<buff_num5>*120$32.zzzzzs0000600001U0003M0000q0k02BUz00NMQw00a73kk1UUDs0MA3z06177t5UTljMM1YfDq0FbvRURNbvM6rrra10wyxUTTbjM1rxxqUBwThi1vzzPk0DzqSU2DxXY01zPzXUDqzzqsljztzUPzwzzqzyTztU0000Tzzzzy"
+    , "|<buff_num6>*120$32.zzzzzs00006zzzzxjzzzzPsDzzqwPzzxjNzsDPjy03qzzU0xjzy0DPzzU3qzzk0xjzs0DPzY03qTl7lxbxHaTPyrrrqz0wxxjzTZzPzqxBqzxwPBjzzzNPzzyP6zzUbljzW0wPztsSazxr7pjxsxrPzw70qzzDs5U0000Tzzzzy"
+    , "|<buff_num7>*120$32.zzzzzs00006zy0zxjs00zPk1U7qy7T1xj70wDPX41XqnXGARXn0HbNdrC8qmztXBcjtYHOPaT4q7lDr5YxLYsPKrrT6n0wxtgzTa7P7rxkqlhwS5hDzztPFnzzqqDzzxhcT3CPv3lj6zPgL1jrkj3PztDrqzwTzxU0000Tzzzzy"
+    , "|<buff_num8>*120$32.zzzzzs00006zzzzxjszyDPtnzjqwzzrxj3xvzPVyBzqs71zxj1UTzPtk1zqyT0Txjzk3zPzY0zqzl7rxjxF7zPyrrzqz0wzxjzTazPzqxzqzxATxUDnz3M0M7yK03BzVXVztoMADyO68Lra1jdssUPzwjU6zyDs1U0000Tzzzzy"
 ]
-BuffName := ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
+BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
 BuffRest := [2600, 2600, 2600, 5100, 5100]
