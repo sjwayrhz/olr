@@ -4,13 +4,16 @@ Sources: ~/workspace/user/files/buff-4s-2026-11-26/buff4s_*.png
 (32x32 crops from her screenshots, 2026-11-26).
 
 Method: same encoder as fenix gen_recycle_patterns.py.
-Threshold 140 (was 180): at 180 the patterns were 89-95% dark (only
-53-111 bright pixels), so a dark patch of game world with a few bright
-speckles matched them and Buff0007 kept false-firing at (36,339).
-At 140 the patterns are 26-39% bright (264-401 bright pixels), much
-harder for a dark patch to match, while the worst pair separation is
-still 0.261, far above the 0.05 tolerance. (At 120 the worst pair was
-0.244; at 180 it was 0.434 but the patterns were too dark to use.)
+Threshold 120 (was 140): at 140 the binarized icons looked blurry and
+the live icons were often missed. At 120 the worst-pair separation is
+0.351 (highest in the 120-140 band), fragility (pixels within +-15 of
+the threshold) is 567 vs 572 at 140, and bright counts are 311-519
+(more white features, clearer shapes). At 180 the patterns were 89-95%
+dark (only 53-111 bright pixels), so a dark patch of game world with a
+few bright speckles matched them and Buff0007 kept false-firing at
+(36,339). At 120 the patterns are 30-51% bright, much harder for a
+dark patch to match, while the worst pair separation is still far
+above the 0.1 tolerance.
 
 Also prints a pairwise separation check (per-class err both directions):
 a pair is safe when both err1 and err0 stay above 0.2 for both directions.
@@ -25,7 +28,7 @@ def gray(px):
     return (r * 38 + g * 75 + b * 15) >> 7
 
 CHARS = "0123456789+/ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-T = 140
+T = 120
 
 def encode(bm, w, name):
     bits = ''.join('1' if bm[y][x] else '0' for y in range(len(bm)) for x in range(w))

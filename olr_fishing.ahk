@@ -20,13 +20,14 @@
 ;   buff4s_0001.png -> Numpad7, rest 5s (no scanning)
 ;   buff4s_0030.png -> Numpad8, rest 5s (no scanning)
 ;
-; FindText patterns: threshold 140, generated from the 32x32 buff
+; FindText patterns: threshold 120, generated from the 32x32 buff
 ; crops (tools/gen_buff_patterns.py). Threshold 180 was too dark: the
 ; patterns were 89-95% dark (only 53-111 bright pixels), so a dark
 ; patch of game world kept false-matching Buff0007 at (36,339).
-; At 140 the patterns are 61-74% dark (264-401 bright pixels), much
-; harder for a dark patch to match, and the worst pair still
-; separates by 0.318, far above the 0.1 tolerance.
+; At 140 the binarized icons looked blurry and live icons were often
+; missed. At 120 the patterns are 49-70% dark (311-519 bright pixels),
+; the shapes are clearer, and the worst pair still separates by
+; 0.351, far above the 0.1 tolerance.
 
 #Requires AutoHotkey v2.0
 #SingleInstance Force
@@ -63,11 +64,11 @@ BadSpotR := 50
 
 ; Buff order: 0007, 0005, 0020, 0001, 0030
 BuffText := [
-    "|<Buff0007>*140$32.zzzzzs00006zzzzxjzzzzPzzwLqzzzNxj3zzzPk0zzqw07zxj07zzPk1zzqw7Dzxj3lzzPtaTzqytLzxjxHbzPyrrzqz0wzxjzTbzPjrxzqnRwTxjjzzzOzzzzqDi7zxXs6zzNy/zzqzXrzxjvvvzP1xzzqUTTzxU0000Tzzzzy"
-    , "|<Buff0005>*140$32.zzzzzs00006007zxU00TzM001zq1k07xUzU0TMQwE7q7Xks5UsTw5MA3zcK3jDx5UTlzMMFYzjq2tjvxdxPbvPCrrzq30wzxUzTbjM5rxzqWRwTxi3zzzPk3Dzqyk3TxXiq1zPzblDqzzzupjzzzxPzzzzqzzzzxU0000Tzzzzy"
-    , "|<Buff0020>*140$32.zzzzzs00006zzzzxjzzzzPuTzzqyvzzxjzzwDPzz03qzzU0xjzy0DPzzU3qzzk0xjzsUDPzaE3qzlDlxjxLazPyrrrqz0wzxjzTZzPzrxhqzxwPBjzzzPPzzzzKzzUbljzW1wPztwTazzrbxjxvxzPzxzUqzzTs5U0000Tzzzzy"
-    , "|<Buff0001>*140$32.zzzzzs00006zz6zxjz86zPs7kDqz7TVxj70wDPbbnXqrbmQRXncPbNjzCBqmztnBhjvwnOTaT4qztTrZjxLYtPSrrz6rUxztgzTa7PDrxsqxhwT5jDzztPlnzzqyDzzxjszXjPzLlz6zzizVjzzz7PzvzzqzyzzxU0000Tzzzzy"
-    , "|<Buff0030>*140$32.zzzzzs00006zzzzxjtzzTPvvzjqwzzzxjDzvzPXyBzqw73zxj3UTzPtk3zqzT0Txjzk7zPzY0zqzl7zxjxHbzPyrrzqz0wzxjzTbzPzrxzqzxgTxiTvzDM0TzyK83zzlXVzvwMDDyS6xTrb1jxvzUPzxzU6zzTsFU0000Tzzzzy"
+    , "|<Buff0001>*120$32.zzzzzs00006zy0zxjs00zPk1U7qy7T1xj70wDPX41XqnXGARXn0HbNdrC8qmztXBcjtYHOPaT4q7lDr5YxLYsPKrrT6n0wxtgzTa7P7rxkqlhwS5hDzztPFnzzqqDzzxhcT3CPv3lj6zPgL1jrkj3PztDrqzwTzxU0000Tzzzzy"
+    , "|<Buff0005>*120$32.zzzzzs0000600001U0003M0000q0k02BUz00NMQw00a73kk1UUDs0MA3z06177t5UTljMM1YfDq0FbvRURNbvM6rrra10wyxUTTbjM1rxxqUBwThi1vzzPk0DzqSU2DxXY01zPzXUDqzzqsljztzUPzwzzqzyTztU0000Tzzzzy"
+    , "|<Buff0020>*120$32.zzzzzs00006zzzzxjzzzzPsDzzqwPzzxjNzsDPjy03qzzU0xjzy0DPzzU3qzzk0xjzs0DPzY03qTl7lxbxHaTPyrrrqz0wxxjzTZzPzqxBqzxwPBjzzzNPzzyP6zzUbljzW0wPztsSazxr7pjxsxrPzw70qzzDs5U0000Tzzzzy"
+    , "|<Buff0007>*120$32.zzzzzs00006zzzzxjzzzzPzzw7qzzzMxj1ztjPk0Dxqw07zxj07zvPk1zzqw7Dzxj3lzzPlYDzqyl7ztjxHbyPyrrzqz0wzxjzTbzPhqxzqnRwTxdjzzzOKPzzqBU7zxXk4TzNS3rzqjXrzxissvzP0wjzqUDDzxU0000Tzzzzy"
+    , "|<Buff0030>*120$32.zzzzzs00006zzzzxjszyDPtnzjqwzzrxj3xvzPVyBzqs71zxj1UTzPtk1zqyT0Txjzk3zPzY0zqzl7rxjxF7zPyrrzqz0wzxjzTazPzqxzqzxATxUDnz3M0M7yK03BzVXVztoMADyO68Lra1jdssUPzwjU6zyDs1U0000Tzzzzy"
 ]
 BuffName := ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
