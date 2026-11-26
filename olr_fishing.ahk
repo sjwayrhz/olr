@@ -40,7 +40,7 @@ global FishingOn := false
 global FoundNear := false
 global Scanning := false
 
-BuffErrTight := 0.2
+BuffErrTight := 0.3
 ScanMs := 10
 NearR := 100
 
@@ -76,7 +76,7 @@ BuffText := [
 BuffName := ["Buff0007", "Buff0005", "Buff0020", "Buff0001", "Buff0030"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
-BuffRest := [3500, 3500, 3500, 5200, 5200]
+BuffRest := [2600, 2600, 2600, 5100, 5100]
 
 MemX := [-1, -1, -1, -1, -1]
 MemY := [-1, -1, -1, -1, -1]
