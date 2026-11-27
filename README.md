@@ -38,9 +38,9 @@ ArcheAge: One Last Ride 的钓鱼助手（AHK v2）。v0.04。
 
 ### buff_num4（小键盘 4）
 
-<img src="images/buff_num4_1.jpg" width="128"> <img src="images/buff_num4_4.png" width="128">
+<img src="images/buff_num4_1.jpg" width="128"> <img src="images/buff_num4_4.png" width="128"> <img src="images/buff_num4_0003.png" width="128">
 
-左：活图标（2026-11-26 夜里，x=619）；右：老图。两张全图，没有第三张图案。
+左：活图标（2026-11-26 夜里，x=619）；中：老图；**右：第三张全图**（2026-11-28，她发来 Desktop.zip 的 8 张截图让我查为什么 4 号识别率低）。第三张是 ScreenShot0003 里上方中间那行 (620,76) 的 4 号——前两张图案对它误差 0.209–0.253，已经超过 0.2 容错，认不出来。第三张跟其他 buff 的分离度 0.427（最接近 8 号），安全线 0.2 以上，没问题。黑点 450/1024（44%），够密。注意：左上角玩家栏 (72,76) 那个疑似 4 号的图标没用——它对 4 号 0.254、对 8 号 0.263，分不清是谁，用了会认错。
 
 ### buff_num5（小键盘 5）
 

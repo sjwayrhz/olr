@@ -200,6 +200,35 @@ e1, e0 = per_class_err(bms['buff_num5'], bm_n5_3)
 f1, f0 = per_class_err(png_bms['buff_num5'], bm_n5_3)
 print(f'  BuffNum5Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
 
+# Third pattern for num4 only: images/buff_num4_0003.png (ScreenShot0003,
+# 2026-11-28 Desktop.zip batch, top-center target buff area at (620,76)).
+# The user reported num4 recognition was low. Measured at T=80 on the 8
+# new screenshots: the stored num4 patterns (2026-11-26) match the live
+# num4 icon at best err 0.209-0.258 -- above the 0.2 tol, so the script
+# misses it. The (620,76) icon in ScreenShot0003 is clearly num4: it
+# matches the stored num4 jpg at 0.209 (closest), is distinct from num8
+# (0.350) and all other buffs (0.398+). Its black density is 450/1024
+# (44%), dense enough. The other candidate -- the icon at (72,76) in
+# the top-left player bar -- is AMBIGUOUS (num4 0.254 vs num8 0.263),
+# so it is NOT used as a pattern; it would risk false positives.
+# Separation at T=80: worst 0.350 vs other buffs (closest num8 jpg),
+# above the 0.2 tol -- safe.
+print()
+print('Third num4 pattern (buff_num4_0003.png, T=80, ScreenShot0003):')
+s_n4_3, bm_n4_3 = pattern_for(BASE + 'buff_num4_0003.png', 'buff_num4_0003')
+print(f'BuffNum4Third := "{s_n4_3}"')
+n4_3_worst = 1.0
+for other in NAMES:
+    if other == 'buff_num4':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        e1, e0 = per_class_err(bm_n4_3, src_bm)
+        n4_3_worst = min(n4_3_worst, max(e1, e0))
+print(f'  BuffNum4Third: sep_worst vs other buffs={n4_3_worst:.3f} (tol 0.2) {"SAFE" if n4_3_worst > 0.2 else "WOULD MISIDENTIFY"}')
+e1, e0 = per_class_err(bms['buff_num4'], bm_n4_3)
+f1, f0 = per_class_err(png_bms['buff_num4'], bm_n4_3)
+print(f'  BuffNum4Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
+
 # Sub-patterns: only num7 and num8 get a third pattern (the right strip,
 # 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
 # so the right strip is fully digit-free.

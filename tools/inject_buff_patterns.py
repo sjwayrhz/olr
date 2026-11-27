@@ -117,6 +117,10 @@ m_n5_3 = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', 
 assert m_n5_3, "generator output has no BuffNum5Third line"
 n5_3_line = f'BuffNum5Third := {m_n5_3.group(1)}'
 
+m_n4_3 = re.search(r'BuffNum4Third := ("\|<buff_num4_0003>\*80\$32\.[\w+/]+")', out)
+assert m_n4_3, "generator output has no BuffNum4Third line"
+n4_3_line = f'BuffNum4Third := {m_n4_3.group(1)}'
+
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
 
@@ -132,6 +136,7 @@ else:
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
 src = inject_line(src, "ErrorText", err_line)
 src = inject_line(src, "BuffNum5Third", n5_3_line)
+src = inject_line(src, "BuffNum4Third", n4_3_line)
 for header in SUBS:
     src = inject_line(src, header, sub_lines[header])
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
@@ -151,10 +156,13 @@ m_err_after = re.search(r'ErrorText := ("\|<buff4s_error>\*80\$32\.[\w+/]+")', a
 assert m_err_after and m_err_after.group(1) == m_err.group(1), "injected ErrorText does not match generator output"
 m_n5_3_after = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', after)
 assert m_n5_3_after and m_n5_3_after.group(1) == m_n5_3.group(1), "injected BuffNum5Third does not match generator output"
+m_n4_3_after = re.search(r'BuffNum4Third := ("\|<buff_num4_0003>\*80\$32\.[\w+/]+")', after)
+assert m_n4_3_after and m_n4_3_after.group(1) == m_n4_3.group(1), "injected BuffNum4Third does not match generator output"
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
 print("BuffNum5Third (ScreenShot0011 bright fish, T=80),")
+print("BuffNum4Third (ScreenShot0003, T=80),")
 print("ErrorText (buff4s_error at T=80, 32x32, original ScreenShot0004), BuffNum7Right (12x32);")
 print("BuffNum8Right removed 2026-11-28 (terrain false positives at y=168);")
 print("num4/5/6 sub-patterns removed; verified byte-identical to generator output")
