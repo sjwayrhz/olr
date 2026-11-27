@@ -150,12 +150,13 @@ BloodRY2 := 0.20
 ; (replaced 2026-11-27: the old one was a 49x15 red HP bar, this one
 ; is the blue bar right under it). The bar is a blue gradient (gray
 ; 119-137), so T=125 gives a perfect dark/bright split (193 dark,
-; 191 bright). Searched by screen fractions (x 0.30-0.70, y 0.04-0.10),
-; not fixed pixels. Tolerance 0.2: verified against her 5 old
+; 191 bright). Searched by screen fractions (x 0.30-0.70, y 0.04-0.20),
+; not fixed pixels. Tolerance 0.1: verified against her 5 old
 ; screenshots, the pattern matches the blue bar at (590-592, 58) with
-; max err 0.057-0.093, well inside 0.2.
+; max err 0.057-0.093, inside 0.1 but the top end is close to the
+; limit -- if the bar looks different, it may miss.
 BloodText := "|<buff_blood>*125$32.0000000000000M1z07zzzk1zzzw0zzzz0Tzzzk7zzzw0zzzz00zzzk0Dzzw00000U"
-BloodErr := 0.2
+BloodErr := 0.1
 ; Rest times: only two numbers to change. Short rest follows the
 ; buffs that press Space (num4, num5, num6); long rest follows the
 ; rest-only buffs (num7, num8).
