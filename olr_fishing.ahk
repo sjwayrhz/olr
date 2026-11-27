@@ -127,6 +127,7 @@ BloodCheck() {
         FishingOn := false
         RestUntil := [0, 0, 0, 0, 0]
         ShowTip("血条消失，钓鱼功能关闭")
+        PlayBloodGone()
     }
 }
 
@@ -138,6 +139,11 @@ ShowTip(text) {
 
 HideTip() {
     ToolTip()
+}
+
+PlayBloodGone() {
+    SoundBeep(880, 120)
+    SoundBeep(659, 200)
 }
 
 FishTimer() {
