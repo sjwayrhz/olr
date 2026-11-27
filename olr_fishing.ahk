@@ -134,15 +134,17 @@ ErrorErr := 0.2
 
 ; Blood bar search region, as fractions of the screen.
 ; The blue bar sits at x 0.367-0.632, y 0.064-0.078 of the screen
-; (measured in a 1600x900 game; the same ratios hold at other
-; resolutions when the game is full screen). The search region below
-; adds a margin around it, so the bar is found even if the UI shifts
-; a little. No fixed pixel coordinates are used for the blood bar
-; any more.
+; when the game is full screen. But in a window the whole game is
+; shifted down by the title bar and the window offset, so the bar
+; can sit as low as y 0.17 (measured in her 1920x1080 windowed shot,
+; where the bar is at screen y 173-185). The search region below
+; (y 0.04-0.20) covers both full screen and a windowed game, as long
+; as the window is not dragged far down. No fixed pixel coordinates
+; are used for the blood bar any more.
 BloodRX1 := 0.30
 BloodRX2 := 0.70
 BloodRY1 := 0.04
-BloodRY2 := 0.10
+BloodRY2 := 0.20
 
 ; Blood bar pattern, 32x12, threshold 125, from images/buff_blood.png
 ; (replaced 2026-11-27: the old one was a 49x15 red HP bar, this one
