@@ -89,8 +89,8 @@ global LastBuff := 0
 ErrNum4 := 0.1
 ErrNum5 := 0.2
 ErrNum6 := 0.1
-ErrNum7 := 0.3
-ErrNum8 := 0.3
+ErrNum7 := 0.2
+ErrNum8 := 0.2
 BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
 ScanMs := 10
 NearR := 100
@@ -165,7 +165,7 @@ BloodErr := 0.1
 ; Rest times: only two numbers to change. Short rest follows the
 ; buffs that press Space (num4, num5, num6); long rest follows the
 ; rest-only buffs (num7, num8).
-RestShort := 2600
+RestShort := 2900
 RestLong := 5100
 
 MemX := [-1, -1, -1, -1, -1]
