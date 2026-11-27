@@ -220,3 +220,46 @@ for other in NAMES:
             a1, a0 = per_class_err(right, win)
             worst = min(worst, max(a1, a0))
 print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')
+
+# num4/5/6 third pattern, and num7/8 fourth pattern: the "s" region
+# (x 14-24, y 11-23, 10x12) of each buff's _1.jpg. Every icon shows a
+# countdown like "1s"/"4s"; the digit changes but the "s" stays put
+# (verified: "0s", "1s", "4s" all have the "s" at x 17-20). The "s"
+# alone cannot tell buffs apart (same letter in every icon, sliding
+# separation 0.034-0.182), so the pattern is the "s" plus the icon
+# pixels around it, which are different per buff. It stays clear of
+# the digit (digit is at x 9-14). Verified: covers both sources
+# (0.054-0.105), sliding-window separation vs other buffs 0.250-0.312
+# (tol 0.2), matches all 5 num7 variants (0.018-0.123). Caveat: if a
+# countdown ever goes double-digit ("10s"), the "s" may shift right
+# and this pattern would miss; it is an OR pattern, so the other
+# patterns still cover that case.
+print()
+print('s-region sub-pattern (x 14-24, y 11-23):')
+s_lines = []
+s_bms = {}
+for name in NAMES:
+    sub = [row[14:24] for row in bms[name][11:23]]
+    s = encode(sub, 10, name + '_s')
+    t5, bm_s = decode(s)
+    assert bm_s == sub, f'round-trip mismatch for {name}_s'
+    s_bms[name] = bm_s
+    s_lines.append(f'    , "{s}"')
+s_lines[0] = s_lines[0].replace('    , "', '    "', 1)
+print('BuffText3 := [')
+print('\n'.join(s_lines))
+print(']')
+for name in NAMES:
+    sub_png = [row[14:24] for row in png_bms[name][11:23]]
+    e1, e0 = per_class_err(s_bms[name], sub_png)
+    worst = 1.0
+    for other in NAMES:
+        if other == name:
+            continue
+        for src_bm in (bms[other], png_bms[other]):
+            for y in range(0, 32 - 12 + 1):
+                for x in range(0, 32 - 10 + 1):
+                    win = [row[x:x + 10] for row in src_bm[y:y + 12]]
+                    a1, a0 = per_class_err(s_bms[name], win)
+                    worst = min(worst, max(a1, a0))
+    print(f'  {name}_s: vs png max={max(e1, e0):.3f} sep_worst={worst:.3f} {"SAFE" if max(e1, e0) < 0.2 and worst > 0.2 else "NO"}')
