@@ -164,27 +164,25 @@ for name in NAMES:
         worst = max(worst, e1, e0, f1, f0)
     print(f'  {name}_png vs others: worst max err={worst:.3f} tol={TOL[name]} {"SAFE" if worst > TOL[name] else "WOULD MISIDENTIFY"}')
 
-# Sub-patterns: each buff gets one digit-free strip alongside the two
-# full patterns. The countdown digit lives at x9-14, y13-21.
-# num4 uses the TOP strip (32x12, x0-32, y0-12): self 0.034, sep 0.221,
-# 181 black px (47%). The right strip (sep 0.324) was tried first but
-# num4's recognition stayed low in live play (2026-11-27 evening), so
-# the top strip replaced it (commit: num4 top replaces right). The top
-# strip's separation is thin (closest to num8 at 0.221, just above the
-# 0.2 tol) -- if num4 starts being confused with num8, add the right
-# strip back as a fourth pattern.
-# num5/6/7/8 use the RIGHT strip (12x32, x20-32, y0-32): fully
-# digit-free. num5 right-12: self 0.054, sep 0.338, 74 black px.
-# num6 right-12: self 0.050, sep 0.288, 124 black px (32%).
+# Sub-patterns: only num7 and num8 get a third pattern (the right strip,
+# 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
+# so the right strip is fully digit-free.
 # num7 right-12: self 0.047, sep 0.353, 109 black px (28%).
 # num8 right-12: self 0.052, sep 0.351 (since 3ebf49e).
-# History: num7 started with a bottom strip (3bf53ef) and num4/6 with
-# bottom strips (7fce619), but their row 21 touches the digit
-# (num6 x9/13, num7 x8/9/10 differ between sources -- the same flaw
-# that made num5's bottom strip miss). num5 went top (too sparse, 29
-# black px, matched everywhere) then bottom (same row-21 flaw) then
-# right. Right strips fixed all of it, so all five used the right strip
-# (57ef130) until num4 switched to the top strip.
+# num4/5/6 have NO third pattern: they use only the two full patterns.
+# Their sub-patterns were tried and removed one by one because they kept
+# causing misidentification in live play:
+# - num4/6 bottom strips (7fce619): row 21 touches the digit (num6 x9/13,
+#   num7 x8/9/10 differ between sources).
+# - num5 top strip (7fce619): only 29 black px (8%), matched everywhere
+#   (log 2026-11-27 18:36-18:49).
+# - num5 bottom strip (6b58243): row 21 digit pixels, missed often.
+# - num4/6/7 right strips (57ef130): unified, but errors still occurred.
+# - num4 top strip (f016472): self 0.034 but sep only 0.221 (closest to
+#   num8), still caused errors.
+# 2026-11-27 19:38 she decided: only 7 and 8 keep the right strip;
+# 4/5/6 go back to two full patterns only. If 4/5/6 recognition drops,
+# revisit then -- do not re-add sub-patterns unasked.
 # The BuffText3 "s"-region group (add89c5) is retired: the s-pattern
 # is small (10x12) and was matching outside the buff bar row (log:
 # num8 found at y=168, 2026-11-27 evening).
@@ -212,9 +210,6 @@ def sub_pattern(name, box, label):
     return s
 
 print()
-print('sub-patterns (digit-free strips):')
-sub_pattern('buff_num4', (0, 0, 32, 12), 'buff_num4_top')
-sub_pattern('buff_num5', (20, 0, 32, 32), 'buff_num5_right')
-sub_pattern('buff_num6', (20, 0, 32, 32), 'buff_num6_right')
+print('sub-patterns (digit-free right strips, only num7/num8):')
 sub_pattern('buff_num7', (20, 0, 32, 32), 'buff_num7_right')
 sub_pattern('buff_num8', (20, 0, 32, 32), 'buff_num8_right')

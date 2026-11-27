@@ -100,10 +100,7 @@ assert set(by_name) == set(ORDER), f"generator BuffText names {sorted(by_name)} 
 png_lines, png_by_name = parse_block(out, "BuffText2")
 assert len(png_lines) == 5, f"expected 5 BuffText2 lines, got {len(png_lines)}"
 assert set(png_by_name) == set(PNG_ORDER), f"generator BuffText2 names {sorted(png_by_name)} != {PNG_ORDER}"
-SUBS = {"BuffNum4Top": ("buff_num4_top", 32),
-        "BuffNum5Right": ("buff_num5_right", 12),
-        "BuffNum6Right": ("buff_num6_right", 12),
-        "BuffNum7Right": ("buff_num7_right", 12),
+SUBS = {"BuffNum7Right": ("buff_num7_right", 12),
         "BuffNum8Right": ("buff_num8_right", 12)}
 sub_lines = {}
 sub_matches = {}
@@ -128,7 +125,7 @@ else:
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
 for header in SUBS:
     src = inject_line(src, header, sub_lines[header])
-for old in ("BuffNum4Right", "BuffNum4Bottom", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Bottom", "BuffNum7Bottom"):
+for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom"):
     src = delete_line(src, old)
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
@@ -141,8 +138,8 @@ for header, (label, width) in SUBS.items():
     assert header in after, f"{header} missing after injection"
     m_after = re.search(re.escape(header) + r' := ("\|<[^>]+>\*80\$' + str(width) + r'\.[\w+/]+")', after)
     assert m_after and m_after.group(1) == sub_matches[header].group(1), f"injected {header} does not match generator output"
-for old in ("BuffNum4Right", "BuffNum4Bottom", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Bottom", "BuffNum7Bottom"):
+for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
-print("BuffNum4Top (32x12) + BuffNum5Right/6Right/7Right/8Right (12x32);")
-print("old Bottom/Top/Right strips removed; verified byte-identical to generator output")
+print("BuffNum7Right/8Right (12x32); num4/5/6 sub-patterns removed;")
+print("verified byte-identical to generator output")
