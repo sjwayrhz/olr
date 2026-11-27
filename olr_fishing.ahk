@@ -43,9 +43,9 @@ BuffText2 := [
     , "|<buff_num8_png>*80$32.k0000E00000zzzzwDkTyD3lnzDkwCTrwC0xnz3UiBzks71zwC1UDz3kk1zky80TwDjE3z3zY0Tkzl3nwDtF7z3yqLzkz04vwDzNaT3zoxnkht8So01lz00003s0020jU002FU04/wM003X0000kE00AM3000400000000800006"
 ]
 BuffNum5Right := "|<buff_num5_right>*80$12.000000000000000000U000s0l0GsnAN0wso0KQPQR4vYTk7k3Q04000000000000U"
-BuffNum4Bottom := "|<buff_num4_bottom>*80$32.0bzwC0E0k3U5061w000Ez0433Dk7X4Tw6kUVz30k6DkU00Vw00000000002"
-BuffNum6Bottom := "|<buff_num6_bottom>*80$32.67by81c3020w1U0UDlU003wk080zkW7UDtUEm3wM20ky800400000000002"
-BuffNum7Bottom := "|<buff_num7_bottom>*80$22.87zwU81m08A80C0W0E20AE+3U0hY1WT0400002008"
+BuffNum4Right := "|<buff_num4_right>*80$12.0000zwzw1w0w2QyQzAzgzgzozozkzsTszszwHwNwEwks0s1w3wnwTw7wXwVw0000U"
+BuffNum6Right := "|<buff_num6_right>*80$12.0000zwzwzwzw0Q0Q0Q0Q0Q0w0w0wkwEwswowKQGAN4sU0U0U00207U38UA040000U"
+BuffNum7Right := "|<buff_num7_right>*80$12.00003w3w1w0wUwMQAQ4A2A0414k0k0F0oUkkM8M4Q4p0zsCsAM3k2004Uw3w0000U"
 BuffNum8Right := "|<buff_num8_right>*80$12.0000zwsQnwrwDwTwzwzwTwDwDw7wnwLwzwvwNwQQS0w0y0jU60400000U0000000U"
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
@@ -204,18 +204,18 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, BuffNum4Bottom, BuffNum5Right, BuffNum6Bottom, BuffNum7Bottom, BuffNum8Right, MemX, MemY, NearR, FoundNear
+    global BuffText, BuffText2, BuffNum4Right, BuffNum5Right, BuffNum6Right, BuffNum7Right, BuffNum8Right, MemX, MemY, NearR, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     pats := [BuffText[i], BuffText2[i]]
     if (i = 1)
-        pats.Push(BuffNum4Bottom)
+        pats.Push(BuffNum4Right)
     if (i = 2)
         pats.Push(BuffNum5Right)
     if (i = 3)
-        pats.Push(BuffNum6Bottom)
+        pats.Push(BuffNum6Right)
     if (i = 4)
-        pats.Push(BuffNum7Bottom)
+        pats.Push(BuffNum7Right)
     if (i = 5)
         pats.Push(BuffNum8Right)
     if (MemX[i] >= 0) {

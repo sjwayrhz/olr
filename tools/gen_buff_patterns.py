@@ -164,82 +164,24 @@ for name in NAMES:
         worst = max(worst, e1, e0, f1, f0)
     print(f'  {name}_png vs others: worst max err={worst:.3f} tol={TOL[name]} {"SAFE" if worst > TOL[name] else "WOULD MISIDENTIFY"}')
 
-# num7 third pattern: bottom sub-region (x 0-22, y 21-32, 22x11) of
-# buff_num7_1.jpg. The countdown digit lives in rows 3-21, so the
-# bottom rows are digit-free (0 white pixels in both num7 sources).
-# The script tries it for num7 alongside the two full patterns.
-# Verified: covers both num7 sources (0.000/0.123), sliding-window
-# separation vs every other buff's full image is >= 0.345 (tol 0.2).
-print()
-print('num7 bottom sub-pattern (digit-free, x 0-22, y 21-32):')
-bm7 = bms['buff_num7']
-bottom = [row[0:22] for row in bm7[21:32]]
-s_bottom = encode(bottom, 22, 'buff_num7_bottom')
-t3, bm3 = decode(s_bottom)
-assert bm3 == bottom, 'round-trip mismatch for buff_num7_bottom'
-print(f'BuffNum7Bottom := "{s_bottom}"')
-png7_bottom = [row[0:22] for row in png_bms['buff_num7'][21:32]]
-e1, e0 = per_class_err(bottom, png7_bottom)
-print(f'  bottom jpg-pattern vs png bottom: max={max(e1, e0):.3f} (tol 0.2)')
-worst = 1.0
-for other in NAMES:
-    if other == 'buff_num7':
-        continue
-    for src_bm in (bms[other], png_bms[other]):
-        for y in range(0, 32 - 11 + 1):
-            for x in range(0, 32 - 22 + 1):
-                win = [row[x:x + 22] for row in src_bm[y:y + 11]]
-                a1, a0 = per_class_err(bottom, win)
-                worst = min(worst, max(a1, a0))
-print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')
-
-# num8 third pattern: right strip (x 20-32, y 0-32, 12x32) of
-# buff_num8_1.jpg. The countdown digit lives in cols 9-14, rows
-# 13-21, so the right strip is digit-free (the bottom rows that
-# worked for num7 have 19 diff pixels here, so they don't work).
-# Verified: covers both num8 sources (0.000/0.052), sliding-window
-# separation vs every other buff's full image is >= 0.351 (tol 0.2).
-print()
-print('num8 right sub-pattern (digit-free, x 20-32, y 0-32):')
-bm8 = bms['buff_num8']
-right = [row[20:32] for row in bm8]
-s_right = encode(right, 12, 'buff_num8_right')
-t4, bm4 = decode(s_right)
-assert bm4 == right, 'round-trip mismatch for buff_num8_right'
-print(f'BuffNum8Right := "{s_right}"')
-png8_right = [row[20:32] for row in png_bms['buff_num8']]
-e1, e0 = per_class_err(right, png8_right)
-print(f'  right jpg-pattern vs png right: max={max(e1, e0):.3f} (tol 0.2)')
-worst = 1.0
-for other in NAMES:
-    if other == 'buff_num8':
-        continue
-    for src_bm in (bms[other], png_bms[other]):
-        for x in range(0, 32 - 12 + 1):
-            win = [row[x:x + 12] for row in src_bm]
-            a1, a0 = per_class_err(right, win)
-            worst = min(worst, max(a1, a0))
-print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')
-
-# Sub-patterns for num4/5/6 (same method as num7 bottom / num8 right):
-# crop a digit-free region, use it as a third pattern alongside the two
-# full patterns. The countdown digit lives in rows 13-21, cols 9-14, so
-# the bottom strip (y21-32) and the top strip (y0-12) are digit-free.
-# num4 bottom-full (32x11, x0-32, y21-32): self 0.082, sep 0.378.
-# num5 right-12 (12x32, x20-32, y0-32): self 0.054, sep 0.338.
-# (Bottom was tried first: self 0.095, sep 0.333, but row 21 carries
-# digit pixels (x10/13/14 differ between the two sources) and rows
-# 30-31 are empty, so the live icon often missed. The top strip was
-# tried before that: self 0.014, sep 0.345, but only 29 black pixels
-# out of 384 (8%) -- in live play it matched all over the screen
-# (log 2026-11-27 18:36-18:49). The right strip is fully digit-free
-# (digit at x9-14) with 74 black pixels. The left strip: sep 0.464,
-# but the "1" digit's left edge touches x9-10.)
-# num6 bottom-full (32x11, x0-32, y21-32): self 0.088, sep 0.416.
-# All verified against both sources and sliding-window vs other buffs
-# (tol 0.2). The BuffText3 "s"-region group (add89c5) is retired: the
-# s-pattern is small (10x12) and was matching outside the buff bar row
-# (log: num8 found at y=168, 2026-11-27 evening).
+# Sub-patterns: every buff gets a right strip (12x32, x20-32, y0-32).
+# The countdown digit lives at x9-14, so the right strip is fully
+# digit-free for all five. All verified against both sources and
+# sliding-window vs other buffs (tol 0.2).
+# num4 right-12: self 0.078, sep 0.324, 204 black px (53%).
+# num5 right-12: self 0.054, sep 0.338, 74 black px.
+# num6 right-12: self 0.050, sep 0.288, 124 black px (32%).
+# num7 right-12: self 0.047, sep 0.353, 109 black px (28%).
+# num8 right-12: self 0.052, sep 0.351 (since 3ebf49e).
+# History: num7 started with a bottom strip (3bf53ef) and num4/6 with
+# bottom strips (7fce619), but their row 21 touches the digit
+# (num6 x9/13, num7 x8/9/10 differ between sources -- the same flaw
+# that made num5's bottom strip miss). num5 went top (too sparse, 29
+# black px, matched everywhere) then bottom (same row-21 flaw) then
+# right. Right strips fix all of it, so all five use the right strip.
+# The BuffText3 "s"-region group (add89c5) is retired: the s-pattern
+# is small (10x12) and was matching outside the buff bar row (log:
+# num8 found at y=168, 2026-11-27 evening).
 def sub_pattern(name, box, label):
     x1, y1, x2, y2 = box
     w, h = x2 - x1, y2 - y1
@@ -264,7 +206,9 @@ def sub_pattern(name, box, label):
     return s
 
 print()
-print('num4/5/6 sub-patterns (digit-free strips):')
-sub_pattern('buff_num4', (0, 21, 32, 32), 'buff_num4_bottom')
+print('right-strip sub-patterns (digit-free, x 20-32, y 0-32):')
+sub_pattern('buff_num4', (20, 0, 32, 32), 'buff_num4_right')
 sub_pattern('buff_num5', (20, 0, 32, 32), 'buff_num5_right')
-sub_pattern('buff_num6', (0, 21, 32, 32), 'buff_num6_bottom')
+sub_pattern('buff_num6', (20, 0, 32, 32), 'buff_num6_right')
+sub_pattern('buff_num7', (20, 0, 32, 32), 'buff_num7_right')
+sub_pattern('buff_num8', (20, 0, 32, 32), 'buff_num8_right')
