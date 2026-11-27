@@ -66,13 +66,18 @@ global FishingOn := false
 global FoundNear := false
 global Scanning := false
 
-; Rest state: after acting on a buff, the script rests until RestUntil
-; (a tick count). The rest only blocks the SAME buff (RestBuff): while
-; it runs, a different buff is pressed at once (Priority 1/3), and the
-; same buff is pressed only after the rest ends (Priority 1/4). The
-; buff just acted on (RestBuff) is still on screen during its rest.
-global RestUntil := 0
-global RestBuff := 0
+; Rest state: each buff has its own rest timer. After acting on buff i,
+; RestUntil[i] is the tick count when that buff may be pressed again
+; (RestShort 2600 ms for the Space buffs num4/5/6, RestLong 5100 ms
+; for the rest-only buffs num7/num8). A buff still on screen during
+; its own rest is not pressed again; a different buff has its own
+; timer and is pressed when its own rest has expired. This is why the
+; rest is per buff: with a single shared timer, pressing num8 would
+; erase num7's rest, and when both are on screen the script would
+; flip-flop between them on every scan and never rest at all.
+; LastBuff only records the last buff pressed, for the p3/p4 log label.
+global RestUntil := [0, 0, 0, 0, 0]
+global LastBuff := 0
 
 ; Tolerance per buff, one number per key (no groups). num5 is 0.2.
 ; 2026-11-26: a tolerance of 0.4 was tried and reverted the same
@@ -206,11 +211,12 @@ StartFishTimer4() {
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
-    global MasterOn, FishingOn, RestUntil
+    global MasterOn, FishingOn, RestUntil, LastBuff
     MasterOn := !MasterOn
     if (!MasterOn) {
         FishingOn := false
-        RestUntil := 0
+        RestUntil := [0, 0, 0, 0, 0]
+        LastBuff := 0
         ShowTip("脚本已暂停")
     } else {
         ShowTip("脚本已开启")
@@ -242,7 +248,7 @@ BloodCheck() {
         ShowTip("发现血条，钓鱼功能开启")
     } else if (!found && FishingOn) {
         FishingOn := false
-        RestUntil := 0
+        RestUntil := [0, 0, 0, 0, 0]
         ShowTip("血条消失，钓鱼功能关闭")
     }
 }
@@ -269,25 +275,26 @@ FishTimer() {
 }
 
 ; One scan pass over all 5 buffs, each at its own tolerance
-; (BuffErr[i]: 0.1 num4, 0.2 num5, 0.1 num6, 0.1 num7, 0.1 num8).
+; (BuffErr[i]: 0.1 num4, 0.2 num5, 0.1 num6, 0.3 num7, 0.3 num8).
 ; Acts on the first match and returns true.
 ; Priority levels, smaller number = higher priority:
-;   1. num7/num8: press immediately when found.
+;   1. num7/num8: press when found and that buff's own rest has
+;      expired (each buff has its own rest timer, see CanPress).
 ;   2. buff4s_error: when found, immediately scan the 5 buffs
 ;      (7,8,4,5,6) and press based on what is found.
-;   3. A buff different from the last one acted on: press immediately.
-;   4. The same buff as the last one: press only after its rest
-;      (RestShort/RestLong) has elapsed.
+;   3/4. num4/5/6: press when that buff's own rest has expired;
+;      the log label records whether it is the same buff as the
+;      one pressed last time (p4) or a different one (p3).
 ; The rest times themselves are unchanged.
 ScanPass() {
-    global BuffText, BuffErr, RestUntil, RestBuff
+    global BuffText, BuffErr, RestUntil, LastBuff
     global ErrorText, ErrorErr
-    ; Priority 1: num7/num8 first. Same rest rule as the others: a
-    ; different buff ends the rest and is pressed at once; the same
-    ; buff is pressed only after its rest (RestShort/RestLong) has
-    ; elapsed. Without the CanPress check, num7/num8 would be pressed
-    ; again on every scan while still on screen, and the 5.1 s rest
-    ; would never be observed.
+    ; Priority 1: num7/num8 first. Each buff has its own rest timer
+    ; (see CanPress): a buff is pressed only when its own rest has
+    ; expired. A different buff does not cancel another buff's rest,
+    ; so when both num7 and num8 are on screen the script presses
+    ; each one once and then rests, instead of flip-flopping between
+    ; them on every scan.
     ; Indices: 1=num4, 2=num5, 3=num6, 4=num7, 5=num8.
     for _, i in [4, 5] {
         if (FindBuff(i, BuffErr[i], &fx, &fy) && CanPress(i)) {
@@ -308,11 +315,12 @@ ScanPass() {
         }
         return false
     }
-    ; Priority 3/4: num4/5/6. Press if different from the last buff,
-    ; or the same buff but its rest time has elapsed.
+    ; Priority 3/4: num4/5/6. A buff is pressed when its own rest has
+    ; expired. The log label records whether it is the same buff as
+    ; the one pressed last time (p4) or a different one (p3).
     for _, i in [1, 2, 3] {
         if (FindBuff(i, BuffErr[i], &fx, &fy) && CanPress(i)) {
-            pr := (i != RestBuff) ? "p3" : "p4"
+            pr := (i != LastBuff) ? "p3" : "p4"
             LogAction(i, fx, fy, pr)
             DoBuffAction(i)
             return true
@@ -321,16 +329,13 @@ ScanPass() {
     return false
 }
 
-; May buff i be pressed now?
-; Priority 3: a buff different from the last one acted on is pressed
-; immediately. Priority 4: the same buff is pressed only after its
-; rest (RestShort/RestLong) has elapsed.
+; May buff i be pressed now? Each buff has its own rest timer:
+; buff i is pressed only after its own rest (RestShort/RestLong)
+; has expired. Pressing a different buff does not touch this
+; buff's timer.
 CanPress(i) {
-    global RestUntil, RestBuff
-    if (i != RestBuff) {
-        return true
-    }
-    return A_TickCount >= RestUntil
+    global RestUntil
+    return A_TickCount >= RestUntil[i]
 }
 
 ; Find the buff4s_error icon in the top strip. No key is bound to it;
@@ -403,18 +408,16 @@ LogAction(i, fx, fy, label) {
 }
 
 DoBuffAction(i) {
-    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, RestBuff
+    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, LastBuff
     Send("{" BuffKey[i] "}")
     if (BuffSpace[i]) {
         Sleep(2000)
         Send("{Space}")
     }
-    ; Start the rest without blocking: record which buff and when the
-    ; rest ends. The rest only blocks the SAME buff (see CanPress):
-    ; a different buff is pressed at once (Priority 3), the same buff
-    ; only after the rest ends (Priority 4). Short rest after the
-    ; Space buffs (num4/5/6), long rest after the rest-only buffs
-    ; (num7/num8).
-    RestBuff := i
-    RestUntil := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
+    ; Start this buff's own rest without blocking: record when it may
+    ; be pressed again. Other buffs keep their own timers untouched.
+    ; Short rest after the Space buffs (num4/5/6), long rest after the
+    ; rest-only buffs (num7/num8).
+    LastBuff := i
+    RestUntil[i] := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
 }
