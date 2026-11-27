@@ -371,9 +371,9 @@ TryFind(text, x1, y1, x2, y2, err, &fx, &fy) {
         return false
     }
     for _, m in matches {
-        if (!IsNearBadSpot(m.mx, m.my)) {
-            fx := m.mx
-            fy := m.my
+        if (!IsNearBadSpot(m.x, m.y)) {
+            fx := m.x
+            fy := m.y
             return true
         }
     }
