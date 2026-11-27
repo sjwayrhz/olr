@@ -10,9 +10,9 @@ global Scanning := false
 global RestUntil := [0, 0, 0, 0, 0]
 global LastBuff := 0
 
-ErrNum4 := 0.1
+ErrNum4 := 0.2
 ErrNum5 := 0.2
-ErrNum6 := 0.1
+ErrNum6 := 0.2
 ErrNum7 := 0.2
 ErrNum8 := 0.2
 BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
