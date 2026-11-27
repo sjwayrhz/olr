@@ -221,45 +221,44 @@ for other in NAMES:
             worst = min(worst, max(a1, a0))
 print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')
 
-# num4/5/6 third pattern, and num7/8 fourth pattern: the "s" region
-# (x 14-24, y 11-23, 10x12) of each buff's _1.jpg. Every icon shows a
-# countdown like "1s"/"4s"; the digit changes but the "s" stays put
-# (verified: "0s", "1s", "4s" all have the "s" at x 17-20). The "s"
-# alone cannot tell buffs apart (same letter in every icon, sliding
-# separation 0.034-0.182), so the pattern is the "s" plus the icon
-# pixels around it, which are different per buff. It stays clear of
-# the digit (digit is at x 9-14). Verified: covers both sources
-# (0.054-0.105), sliding-window separation vs other buffs 0.250-0.312
-# (tol 0.2), matches all 5 num7 variants (0.018-0.123). Caveat: if a
-# countdown ever goes double-digit ("10s"), the "s" may shift right
-# and this pattern would miss; it is an OR pattern, so the other
-# patterns still cover that case.
-print()
-print('s-region sub-pattern (x 14-24, y 11-23):')
-s_lines = []
-s_bms = {}
-for name in NAMES:
-    sub = [row[14:24] for row in bms[name][11:23]]
-    s = encode(sub, 10, name + '_s')
-    t5, bm_s = decode(s)
-    assert bm_s == sub, f'round-trip mismatch for {name}_s'
-    s_bms[name] = bm_s
-    s_lines.append(f'    , "{s}"')
-s_lines[0] = s_lines[0].replace('    , "', '    "', 1)
-print('BuffText3 := [')
-print('\n'.join(s_lines))
-print(']')
-for name in NAMES:
-    sub_png = [row[14:24] for row in png_bms[name][11:23]]
-    e1, e0 = per_class_err(s_bms[name], sub_png)
+# Sub-patterns for num4/5/6 (same method as num7 bottom / num8 right):
+# crop a digit-free region, use it as a third pattern alongside the two
+# full patterns. The countdown digit lives in rows 13-21, cols 9-14, so
+# the bottom strip (y21-32) and the top strip (y0-12) are digit-free.
+# num4 bottom-full (32x11, x0-32, y21-32): self 0.082, sep 0.378.
+# num5 top-full (32x12, x0-32, y0-12): self 0.014, sep 0.345. (The left
+# strip was tried first: sep 0.464 but the "1" digit's left edge touches
+# x9-10, so the top strip is the safe choice.)
+# num6 bottom-full (32x11, x0-32, y21-32): self 0.088, sep 0.416.
+# All verified against both sources and sliding-window vs other buffs
+# (tol 0.2). The BuffText3 "s"-region group (add89c5) is retired: the
+# s-pattern is small (10x12) and was matching outside the buff bar row
+# (log: num8 found at y=168, 2026-11-27 evening).
+def sub_pattern(name, box, label):
+    x1, y1, x2, y2 = box
+    w, h = x2 - x1, y2 - y1
+    sub = [row[x1:x2] for row in bms[name][y1:y2]]
+    s = encode(sub, w, label)
+    t6, bm6 = decode(s)
+    assert bm6 == sub, f'round-trip mismatch for {label}'
+    print(f'{label} := "{s}"')
+    sub_png = [row[x1:x2] for row in png_bms[name][y1:y2]]
+    e1, e0 = per_class_err(sub, sub_png)
     worst = 1.0
     for other in NAMES:
         if other == name:
             continue
         for src_bm in (bms[other], png_bms[other]):
-            for y in range(0, 32 - 12 + 1):
-                for x in range(0, 32 - 10 + 1):
-                    win = [row[x:x + 10] for row in src_bm[y:y + 12]]
-                    a1, a0 = per_class_err(s_bms[name], win)
+            for y in range(0, 32 - h + 1):
+                for x in range(0, 32 - w + 1):
+                    win = [row[x:x + w] for row in src_bm[y:y + h]]
+                    a1, a0 = per_class_err(sub, win)
                     worst = min(worst, max(a1, a0))
-    print(f'  {name}_s: vs png max={max(e1, e0):.3f} sep_worst={worst:.3f} {"SAFE" if max(e1, e0) < 0.2 and worst > 0.2 else "NO"}')
+    print(f'  {label}: vs png max={max(e1, e0):.3f} sep_worst={worst:.3f} (tol 0.2) {"SAFE" if max(e1, e0) < 0.2 and worst > 0.2 else "NO"}')
+    return s
+
+print()
+print('num4/5/6 sub-patterns (digit-free strips):')
+sub_pattern('buff_num4', (0, 21, 32, 32), 'buff_num4_bottom')
+sub_pattern('buff_num5', (0, 0, 32, 12), 'buff_num5_top')
+sub_pattern('buff_num6', (0, 21, 32, 32), 'buff_num6_bottom')

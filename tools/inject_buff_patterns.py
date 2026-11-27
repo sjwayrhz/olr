@@ -100,18 +100,23 @@ bottom_line = f'BuffNum7Bottom := {m_bottom.group(1)}'
 m_right = re.search(r'BuffNum8Right := ("\|<buff_num8_right>\*80\$12\.[\w+/]+")', out)
 assert m_right, "generator output has no BuffNum8Right line"
 right_line = f'BuffNum8Right := {m_right.group(1)}'
-S_ORDER = ["buff_num4_s", "buff_num5_s", "buff_num6_s", "buff_num7_s", "buff_num8_s"]
-s_lines, s_by_name = parse_block(out, "BuffText3")
-assert len(s_lines) == 5, f"expected 5 BuffText3 lines, got {len(s_lines)}"
-assert set(s_by_name) == set(S_ORDER), f"generator BuffText3 names {sorted(s_by_name)} != {S_ORDER}"
+m_b4 = re.search(r'buff_num4_bottom := ("\|<buff_num4_bottom>\*80\$32\.[\w+/]+")', out)
+assert m_b4, "generator output has no buff_num4_bottom line"
+b4_line = f'BuffNum4Bottom := {m_b4.group(1)}'
+m_t5 = re.search(r'buff_num5_top := ("\|<buff_num5_top>\*80\$32\.[\w+/]+")', out)
+assert m_t5, "generator output has no buff_num5_top line"
+t5_line = f'BuffNum5Top := {m_t5.group(1)}'
+m_b6 = re.search(r'buff_num6_bottom := ("\|<buff_num6_bottom>\*80\$32\.[\w+/]+")', out)
+assert m_b6, "generator output has no buff_num6_bottom line"
+b6_line = f'BuffNum6Bottom := {m_b6.group(1)}'
 
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
-new_s = emit_block(S_ORDER, s_by_name)
 
 src = open(AHK, encoding="utf-8-sig").read()
 src = inject_block(src, "BuffText", new_text)
 src = delete_block(src, "BuffNum7Text")
+src = delete_block(src, "BuffText3")
 if "BuffText2 := [" in src:
     src = inject_block(src, "BuffText2", new_png)
 else:
@@ -120,23 +125,21 @@ else:
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
 src = inject_line(src, "BuffNum7Bottom", bottom_line)
 src = inject_line(src, "BuffNum8Right", right_line)
-if "BuffText3 := [" in src:
-    src = inject_block(src, "BuffText3", new_s)
-else:
-    anchor = "BuffText2 := [\n" + "\n".join(new_png) + "\n]"
-    idx = src.index(anchor) + len(anchor)
-    src = src[:idx] + "\nBuffText3 := [\n" + "\n".join(new_s) + "\n]" + src[idx:]
+src = inject_line(src, "BuffNum4Bottom", b4_line)
+src = inject_line(src, "BuffNum5Top", t5_line)
+src = inject_line(src, "BuffNum6Bottom", b6_line)
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
 after = open(AHK, encoding="utf-8-sig").read()
 verify_block(after, "BuffText", ORDER, new_text)
 verify_block(after, "BuffText2", PNG_ORDER, new_png)
-verify_block(after, "BuffText3", S_ORDER, new_s)
 assert "BuffNum7Text" not in after, "BuffNum7Text block was not removed"
-m_after = re.search(r'BuffNum7Bottom := ("\|<buff_num7_bottom>\*80\$22\.[\w+/]+")', after)
-assert m_after and m_after.group(1) == m_bottom.group(1), "injected BuffNum7Bottom does not match generator output"
-m_after2 = re.search(r'BuffNum8Right := ("\|<buff_num8_right>\*80\$12\.[\w+/]+")', after)
-assert m_after2 and m_after2.group(1) == m_right.group(1), "injected BuffNum8Right does not match generator output"
+assert "BuffText3" not in after, "BuffText3 block was not removed"
+for header, m_gen in (("BuffNum7Bottom", m_bottom), ("BuffNum8Right", m_right),
+                      ("BuffNum4Bottom", m_b4), ("BuffNum5Top", m_t5), ("BuffNum6Bottom", m_b6)):
+    m_after = re.search(re.escape(header) + r' := ("\|<[^>]+>\*80\$\d+\.[\w+/]+")', after)
+    assert m_after and m_after.group(1) == m_gen.group(1), f"injected {header} does not match generator output"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
-print("BuffText3 (5 s-region patterns at T=80), BuffNum7Bottom (digit-free 22x11) and")
-print("BuffNum8Right (digit-free 12x32); BuffNum7Text removed; verified byte-identical to generator output")
+print("BuffNum4Bottom (32x11), BuffNum5Top (32x12), BuffNum6Bottom (32x11),")
+print("BuffNum7Bottom (22x11) and BuffNum8Right (12x32); BuffText3 removed;")
+print("verified byte-identical to generator output")
