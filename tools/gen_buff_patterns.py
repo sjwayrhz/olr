@@ -229,6 +229,37 @@ e1, e0 = per_class_err(bms['buff_num4'], bm_n4_3)
 f1, f0 = per_class_err(png_bms['buff_num4'], bm_n4_3)
 print(f'  BuffNum4Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
 
+# Third pattern for num6 only: images/buff_num6_0026.png (ScreenShot0026,
+# 2026-11-28 Desktop-db95b4ee.zip batch, top-center target buff area at
+# (618,76)). The user sent 6 screenshots and asked to optimize num6.
+# Measured at T=80: the stored num6 patterns (2026-11-26) match the live
+# num6 icon at best err 0.222-0.237 -- above the 0.2 tol, so the script
+# misses it. The (618,76) icon in ScreenShot0026 is clearly num6: it
+# matches the stored num6 jpg at 0.222 (closest), is distinct from num8
+# (0.389) and all other buffs (0.453+), and distinct from the new
+# BuffNum4Third (0.556). Its black density is 431/1024 (42%), dense
+# enough. It also covers the same (618,76) icon in ScreenShot0028 and
+# 0031 (err 0.060/0.070). The other candidate -- the icon at (6,76) in
+# the top-left player bar -- is AMBIGUOUS (num6 0.317 vs num4 0.314 vs
+# num8 0.360), so it is NOT used as a pattern.
+# Separation at T=80: worst 0.389 vs other buffs (closest num8 jpg),
+# above the 0.2 tol -- safe.
+print()
+print('Third num6 pattern (buff_num6_0026.png, T=80, ScreenShot0026):')
+s_n6_3, bm_n6_3 = pattern_for(BASE + 'buff_num6_0026.png', 'buff_num6_0026')
+print(f'BuffNum6Third := "{s_n6_3}"')
+n6_3_worst = 1.0
+for other in NAMES:
+    if other == 'buff_num6':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        e1, e0 = per_class_err(bm_n6_3, src_bm)
+        n6_3_worst = min(n6_3_worst, max(e1, e0))
+print(f'  BuffNum6Third: sep_worst vs other buffs={n6_3_worst:.3f} (tol 0.2) {"SAFE" if n6_3_worst > 0.2 else "WOULD MISIDENTIFY"}')
+e1, e0 = per_class_err(bms['buff_num6'], bm_n6_3)
+f1, f0 = per_class_err(png_bms['buff_num6'], bm_n6_3)
+print(f'  BuffNum6Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
+
 # Sub-patterns: only num7 and num8 get a third pattern (the right strip,
 # 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
 # so the right strip is fully digit-free.
