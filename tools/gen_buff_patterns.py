@@ -204,7 +204,8 @@ print(f'  BuffNum5Third: existing jpg pattern vs this image max={max(e1, e0):.3f
 # 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
 # so the right strip is fully digit-free.
 # num7 right-12: self 0.047, sep 0.353, 109 black px (28%).
-# num8 right-12: self 0.052, sep 0.351 (since 3ebf49e).
+# num8 right-12: self 0.052, sep 0.351 (since 3ebf49e) -- REMOVED
+# 2026-11-28, see below.
 # num4/5/6 have NO third pattern: they use only the two full patterns.
 # Their sub-patterns were tried and removed one by one because they kept
 # causing misidentification in live play:
@@ -246,9 +247,18 @@ def sub_pattern(name, box, label):
     return s
 
 print()
-print('sub-patterns (digit-free right strips, only num7/num8):')
+print('sub-patterns (digit-free right strips, only num7 now):')
 sub_pattern('buff_num7', (20, 0, 32, 32), 'buff_num7_right')
-sub_pattern('buff_num8', (20, 0, 32, 32), 'buff_num8_right')
+# buff_num8_right REMOVED 2026-11-28: the 12x32 strip kept matching
+# terrain outside the buff bar row (log 2026-11-28 05:24-05:38: every
+# num8 press was at y=168 or y=318, while the real buff bar is y=207;
+# after num7 was pressed and went on its 5.1s rest, the script found a
+# false num8 at y=168 and pressed 8 instead of waiting for 7). A thin
+# 12px strip is not distinctive enough -- it matches vertical terrain
+# features (tree trunks, rock edges). Same failure mode as the retired
+# "s" pattern (10x12), which also false-matched at y=168. num8 keeps
+# its two full 32x32 patterns (jpg + png); num7 keeps its right strip
+# (it never false-matched).
 
 # buff4s_error pattern (red downward arrow, images/buff4s_error.png).
 # The image is the part BELOW the x4 stack count (32x20, y12-32 of the

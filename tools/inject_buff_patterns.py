@@ -100,8 +100,7 @@ assert set(by_name) == set(ORDER), f"generator BuffText names {sorted(by_name)} 
 png_lines, png_by_name = parse_block(out, "BuffText2")
 assert len(png_lines) == 5, f"expected 5 BuffText2 lines, got {len(png_lines)}"
 assert set(png_by_name) == set(PNG_ORDER), f"generator BuffText2 names {sorted(png_by_name)} != {PNG_ORDER}"
-SUBS = {"BuffNum7Right": ("buff_num7_right", 12),
-        "BuffNum8Right": ("buff_num8_right", 12)}
+SUBS = {"BuffNum7Right": ("buff_num7_right", 12)}
 sub_lines = {}
 sub_matches = {}
 for header, (label, width) in SUBS.items():
@@ -135,7 +134,7 @@ src = inject_line(src, "ErrorText", err_line)
 src = inject_line(src, "BuffNum5Third", n5_3_line)
 for header in SUBS:
     src = inject_line(src, header, sub_lines[header])
-for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom"):
+for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
     src = delete_line(src, old)
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
@@ -152,9 +151,10 @@ m_err_after = re.search(r'ErrorText := ("\|<buff4s_error>\*40\$32\.[\w+/]+")', a
 assert m_err_after and m_err_after.group(1) == m_err.group(1), "injected ErrorText does not match generator output"
 m_n5_3_after = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', after)
 assert m_n5_3_after and m_n5_3_after.group(1) == m_n5_3.group(1), "injected BuffNum5Third does not match generator output"
-for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom"):
+for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
 print("BuffNum5Third (ScreenShot0011 bright fish, T=80),")
-print("ErrorText (buff4s_error at T=40, 32x20, no x4), BuffNum7Right/8Right (12x32);")
+print("ErrorText (buff4s_error at T=40, 32x20, no x4), BuffNum7Right (12x32);")
+print("BuffNum8Right removed 2026-11-28 (terrain false positives at y=168);")
 print("num4/5/6 sub-patterns removed; verified byte-identical to generator output")
