@@ -114,6 +114,10 @@ m_err = re.search(r'buff4s_error := ("\|<buff4s_error>\*40\$32\.[\w+/]+")', out)
 assert m_err, "generator output has no buff4s_error line"
 err_line = f'ErrorText := {m_err.group(1)}'
 
+m_n5_3 = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', out)
+assert m_n5_3, "generator output has no BuffNum5Third line"
+n5_3_line = f'BuffNum5Third := {m_n5_3.group(1)}'
+
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
 
@@ -128,6 +132,7 @@ else:
     idx = src.index(anchor) + len(anchor)
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
 src = inject_line(src, "ErrorText", err_line)
+src = inject_line(src, "BuffNum5Third", n5_3_line)
 for header in SUBS:
     src = inject_line(src, header, sub_lines[header])
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom"):
@@ -145,8 +150,11 @@ for header, (label, width) in SUBS.items():
     assert m_after and m_after.group(1) == sub_matches[header].group(1), f"injected {header} does not match generator output"
 m_err_after = re.search(r'ErrorText := ("\|<buff4s_error>\*40\$32\.[\w+/]+")', after)
 assert m_err_after and m_err_after.group(1) == m_err.group(1), "injected ErrorText does not match generator output"
+m_n5_3_after = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', after)
+assert m_n5_3_after and m_n5_3_after.group(1) == m_n5_3.group(1), "injected BuffNum5Third does not match generator output"
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
+print("BuffNum5Third (ScreenShot0011 bright fish, T=80),")
 print("ErrorText (buff4s_error at T=40, 32x20, no x4), BuffNum7Right/8Right (12x32);")
 print("num4/5/6 sub-patterns removed; verified byte-identical to generator output")

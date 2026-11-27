@@ -164,6 +164,42 @@ for name in NAMES:
         worst = max(worst, e1, e0, f1, f0)
     print(f'  {name}_png vs others: worst max err={worst:.3f} tol={TOL[name]} {"SAFE" if worst > TOL[name] else "WOULD MISIDENTIFY"}')
 
+# Third pattern for num5 only: images/buff_num5_0011.png (ScreenShot0011,
+# 2026-11-27 20:27 batch). The user sent 6 screenshots with the num5 fish
+# and asked which one best improves num5 recognition. Measured at T=80:
+# - 0002/0013/0022 (clean fish): match the existing jpg/png patterns well
+#   (best err 0.123-0.158) -- already covered, adding one gains nothing.
+# - 0004 (fish with "2s" countdown): err 0.830 vs existing -- the timer
+#   text breaks the match, but the timer value changes every second, so
+#   a "2s" pattern is too specific to be useful. Rejected.
+# - 0011 (clean fish, BRIGHTER): err 0.367/0.415 vs existing patterns --
+#   the existing T=80 patterns do NOT find it. It is brighter (avg gray
+#   140.9 vs 132-137, only 142 black px at T=80 vs 187-223 for the
+#   others), so at T=80 it binarizes sparser. This is the gap: when the
+#   fish icon renders bright, the script misses it. Adding 0011 as a
+#   third pattern covers that case. It also matches the darker instances
+#   (vs 0002/0013/0022: 0.054/0.113/0.120), because its sparse black
+#   pixels are a subset of theirs.
+# Separation at T=80: worst 0.310 vs other buffs (closest num7 png),
+# above the 0.2 tol -- safe. It is sparser than ideal (142/1024 = 14%
+# black), so if num5 starts false-triggering on non-buff screen areas,
+# this pattern is the first suspect.
+print()
+print('Third num5 pattern (buff_num5_0011.png, T=80, ScreenShot0011):')
+s_n5_3, bm_n5_3 = pattern_for(BASE + 'buff_num5_0011.png', 'buff_num5_0011')
+print(f'BuffNum5Third := "{s_n5_3}"')
+n5_3_worst = 1.0
+for other in NAMES:
+    if other == 'buff_num5':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        e1, e0 = per_class_err(bm_n5_3, src_bm)
+        n5_3_worst = min(n5_3_worst, max(e1, e0))
+print(f'  BuffNum5Third: sep_worst vs other buffs={n5_3_worst:.3f} (tol 0.2) {"SAFE" if n5_3_worst > 0.2 else "WOULD MISIDENTIFY"}')
+e1, e0 = per_class_err(bms['buff_num5'], bm_n5_3)
+f1, f0 = per_class_err(png_bms['buff_num5'], bm_n5_3)
+print(f'  BuffNum5Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
+
 # Sub-patterns: only num7 and num8 get a third pattern (the right strip,
 # 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
 # so the right strip is fully digit-free.
