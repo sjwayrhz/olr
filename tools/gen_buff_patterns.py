@@ -192,3 +192,31 @@ for other in NAMES:
                 a1, a0 = per_class_err(bottom, win)
                 worst = min(worst, max(a1, a0))
 print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')
+
+# num8 third pattern: right strip (x 20-32, y 0-32, 12x32) of
+# buff_num8_1.jpg. The countdown digit lives in cols 9-14, rows
+# 13-21, so the right strip is digit-free (the bottom rows that
+# worked for num7 have 19 diff pixels here, so they don't work).
+# Verified: covers both num8 sources (0.000/0.052), sliding-window
+# separation vs every other buff's full image is >= 0.351 (tol 0.2).
+print()
+print('num8 right sub-pattern (digit-free, x 20-32, y 0-32):')
+bm8 = bms['buff_num8']
+right = [row[20:32] for row in bm8]
+s_right = encode(right, 12, 'buff_num8_right')
+t4, bm4 = decode(s_right)
+assert bm4 == right, 'round-trip mismatch for buff_num8_right'
+print(f'BuffNum8Right := "{s_right}"')
+png8_right = [row[20:32] for row in png_bms['buff_num8']]
+e1, e0 = per_class_err(right, png8_right)
+print(f'  right jpg-pattern vs png right: max={max(e1, e0):.3f} (tol 0.2)')
+worst = 1.0
+for other in NAMES:
+    if other == 'buff_num8':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        for x in range(0, 32 - 12 + 1):
+            win = [row[x:x + 12] for row in src_bm]
+            a1, a0 = per_class_err(right, win)
+            worst = min(worst, max(a1, a0))
+print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')
