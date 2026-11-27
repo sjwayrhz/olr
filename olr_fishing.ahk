@@ -44,7 +44,7 @@ BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
 
 ErrorText := "|<buff4s_error>*80$32.zzzzzk0000A00001TzzzyLzzzzZzzzztTzzzyLzzzzZzjzztTvzzyLyzzzZzjzztTvzzyLyzzzZzjzztTzzry7yzxzZzDz7sTzzzyLzzzzVzzzrtTzzvyLzzzzZzzzztTxzzyLzjjzZzzzztTzXzy7zkTzZzs3ztTy0TyE00006"
-ErrorErr := 0.2
+ErrorErr := 0.3
 
 BloodRX1 := 0.30
 BloodRX2 := 0.70
