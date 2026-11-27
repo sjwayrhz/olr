@@ -164,12 +164,17 @@ for name in NAMES:
         worst = max(worst, e1, e0, f1, f0)
     print(f'  {name}_png vs others: worst max err={worst:.3f} tol={TOL[name]} {"SAFE" if worst > TOL[name] else "WOULD MISIDENTIFY"}')
 
-# Sub-patterns: every buff gets a right strip (12x32, x20-32, y0-32).
-# The countdown digit lives at x9-14, so the right strip is fully
-# digit-free for all five. All verified against both sources and
-# sliding-window vs other buffs (tol 0.2).
-# num4 right-12: self 0.078, sep 0.324, 204 black px (53%).
-# num5 right-12: self 0.054, sep 0.338, 74 black px.
+# Sub-patterns: each buff gets one digit-free strip alongside the two
+# full patterns. The countdown digit lives at x9-14, y13-21.
+# num4 uses the TOP strip (32x12, x0-32, y0-12): self 0.034, sep 0.221,
+# 181 black px (47%). The right strip (sep 0.324) was tried first but
+# num4's recognition stayed low in live play (2026-11-27 evening), so
+# the top strip replaced it (commit: num4 top replaces right). The top
+# strip's separation is thin (closest to num8 at 0.221, just above the
+# 0.2 tol) -- if num4 starts being confused with num8, add the right
+# strip back as a fourth pattern.
+# num5/6/7/8 use the RIGHT strip (12x32, x20-32, y0-32): fully
+# digit-free. num5 right-12: self 0.054, sep 0.338, 74 black px.
 # num6 right-12: self 0.050, sep 0.288, 124 black px (32%).
 # num7 right-12: self 0.047, sep 0.353, 109 black px (28%).
 # num8 right-12: self 0.052, sep 0.351 (since 3ebf49e).
@@ -178,7 +183,8 @@ for name in NAMES:
 # (num6 x9/13, num7 x8/9/10 differ between sources -- the same flaw
 # that made num5's bottom strip miss). num5 went top (too sparse, 29
 # black px, matched everywhere) then bottom (same row-21 flaw) then
-# right. Right strips fix all of it, so all five use the right strip.
+# right. Right strips fixed all of it, so all five used the right strip
+# (57ef130) until num4 switched to the top strip.
 # The BuffText3 "s"-region group (add89c5) is retired: the s-pattern
 # is small (10x12) and was matching outside the buff bar row (log:
 # num8 found at y=168, 2026-11-27 evening).
@@ -206,8 +212,8 @@ def sub_pattern(name, box, label):
     return s
 
 print()
-print('right-strip sub-patterns (digit-free, x 20-32, y 0-32):')
-sub_pattern('buff_num4', (20, 0, 32, 32), 'buff_num4_right')
+print('sub-patterns (digit-free strips):')
+sub_pattern('buff_num4', (0, 0, 32, 12), 'buff_num4_top')
 sub_pattern('buff_num5', (20, 0, 32, 32), 'buff_num5_right')
 sub_pattern('buff_num6', (20, 0, 32, 32), 'buff_num6_right')
 sub_pattern('buff_num7', (20, 0, 32, 32), 'buff_num7_right')

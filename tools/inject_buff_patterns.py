@@ -100,15 +100,18 @@ assert set(by_name) == set(ORDER), f"generator BuffText names {sorted(by_name)} 
 png_lines, png_by_name = parse_block(out, "BuffText2")
 assert len(png_lines) == 5, f"expected 5 BuffText2 lines, got {len(png_lines)}"
 assert set(png_by_name) == set(PNG_ORDER), f"generator BuffText2 names {sorted(png_by_name)} != {PNG_ORDER}"
-RIGHT = ["BuffNum4Right", "BuffNum5Right", "BuffNum6Right", "BuffNum7Right", "BuffNum8Right"]
-right_lines = {}
-right_matches = {}
-for header in RIGHT:
-    label = header.replace("BuffNum", "buff_num").replace("Right", "_right")
-    m = re.search(re.escape(label) + r' := ("\|<' + label + r'>\*80\$12\.[\w+/]+")', out)
+SUBS = {"BuffNum4Top": ("buff_num4_top", 32),
+        "BuffNum5Right": ("buff_num5_right", 12),
+        "BuffNum6Right": ("buff_num6_right", 12),
+        "BuffNum7Right": ("buff_num7_right", 12),
+        "BuffNum8Right": ("buff_num8_right", 12)}
+sub_lines = {}
+sub_matches = {}
+for header, (label, width) in SUBS.items():
+    m = re.search(re.escape(label) + r' := ("\|<' + label + r'>\*80\$' + str(width) + r'\.[\w+/]+")', out)
     assert m, f"generator output has no {label} line"
-    right_matches[header] = m
-    right_lines[header] = f'{header} := {m.group(1)}'
+    sub_matches[header] = m
+    sub_lines[header] = f'{header} := {m.group(1)}'
 
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
@@ -123,9 +126,9 @@ else:
     anchor = "BuffText := [\n" + "\n".join(new_text) + "\n]"
     idx = src.index(anchor) + len(anchor)
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
-for header in RIGHT:
-    src = inject_line(src, header, right_lines[header])
-for old in ("BuffNum4Bottom", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Bottom", "BuffNum7Bottom"):
+for header in SUBS:
+    src = inject_line(src, header, sub_lines[header])
+for old in ("BuffNum4Right", "BuffNum4Bottom", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Bottom", "BuffNum7Bottom"):
     src = delete_line(src, old)
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
@@ -134,12 +137,12 @@ verify_block(after, "BuffText", ORDER, new_text)
 verify_block(after, "BuffText2", PNG_ORDER, new_png)
 assert "BuffNum7Text" not in after, "BuffNum7Text block was not removed"
 assert "BuffText3" not in after, "BuffText3 block was not removed"
-for header in RIGHT:
+for header, (label, width) in SUBS.items():
     assert header in after, f"{header} missing after injection"
-    m_after = re.search(re.escape(header) + r' := ("\|<[^>]+>\*80\$12\.[\w+/]+")', after)
-    assert m_after and m_after.group(1) == right_matches[header].group(1), f"injected {header} does not match generator output"
-for old in ("BuffNum4Bottom", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Bottom", "BuffNum7Bottom"):
+    m_after = re.search(re.escape(header) + r' := ("\|<[^>]+>\*80\$' + str(width) + r'\.[\w+/]+")', after)
+    assert m_after and m_after.group(1) == sub_matches[header].group(1), f"injected {header} does not match generator output"
+for old in ("BuffNum4Right", "BuffNum4Bottom", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Bottom", "BuffNum7Bottom"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
-print("BuffNum4Right/5Right/6Right/7Right/8Right (12x32 right strips);")
-print("old Bottom/Top strips removed; verified byte-identical to generator output")
+print("BuffNum4Top (32x12) + BuffNum5Right/6Right/7Right/8Right (12x32);")
+print("old Bottom/Top/Right strips removed; verified byte-identical to generator output")
