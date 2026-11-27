@@ -42,7 +42,7 @@ BuffText2 := [
     , "|<buff_num7_png>*80$32.k0000M00000zy03wD000z3U007my2P1wC20MD3301VkUW0AQ2001X9VW+8kkTM048XlUF0/aT002l7k00RL4E06rrG010wlkAzTa225rxUEUBsS489zzE2EU7zUU23Cs80C162810D0U3020+3U032qE67kbk03wU0000S0802C"
     , "|<buff_num8_png>*80$32.k0000E00000zzzzwDkTyD3lnzDkwCTrwC0xnz3UiBzks71zwC1UDz3kk1zky80TwDjE3z3zY0Tkzl3nwDtF7z3yqLzkz04vwDzNaT3zoxnkht8So01lz00003s0020jU002FU04/wM003X0000kE00AM3000400000000800006"
 ]
-BuffNum5Bottom := "|<buff_num5_bottom>*80$32.A3Vyt1U05z0E007k1U00r31300Etr400DtUU03zk400zs00000000000002"
+BuffNum5Right := "|<buff_num5_right>*80$12.000000000000000000U000s0l0GsnAN0wso0KQPQR4vYTk7k3Q04000000000000U"
 BuffNum4Bottom := "|<buff_num4_bottom>*80$32.0bzwC0E0k3U5061w000Ez0433Dk7X4Tw6kUVz30k6DkU00Vw00000000002"
 BuffNum6Bottom := "|<buff_num6_bottom>*80$32.67by81c3020w1U0UDlU003wk080zkW7UDtUEm3wM20ky800400000000002"
 BuffNum7Bottom := "|<buff_num7_bottom>*80$22.87zwU81m08A80C0W0E20AE+3U0hY1WT0400002008"
@@ -204,14 +204,14 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, BuffNum4Bottom, BuffNum5Bottom, BuffNum6Bottom, BuffNum7Bottom, BuffNum8Right, MemX, MemY, NearR, FoundNear
+    global BuffText, BuffText2, BuffNum4Bottom, BuffNum5Right, BuffNum6Bottom, BuffNum7Bottom, BuffNum8Right, MemX, MemY, NearR, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     pats := [BuffText[i], BuffText2[i]]
     if (i = 1)
         pats.Push(BuffNum4Bottom)
     if (i = 2)
-        pats.Push(BuffNum5Bottom)
+        pats.Push(BuffNum5Right)
     if (i = 3)
         pats.Push(BuffNum6Bottom)
     if (i = 4)
