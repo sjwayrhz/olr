@@ -213,3 +213,42 @@ print()
 print('sub-patterns (digit-free right strips, only num7/num8):')
 sub_pattern('buff_num7', (20, 0, 32, 32), 'buff_num7_right')
 sub_pattern('buff_num8', (20, 0, 32, 32), 'buff_num8_right')
+
+# buff4s_error pattern (red downward arrow, 32x32, images/buff4s_error.png).
+# Threshold is 60, NOT 80 like the buffs: the error icon is brighter
+# (avg gray 78 vs buffs ~60), and at T=60 the separation from the buffs
+# is 0.502 (best), vs 0.421 at T=80 and 0.280 at T=120 (below the 0.3
+# tol -- unsafe). Lower is better here: T=50 gives 0.545, T=40 gives
+# 0.603, but the pattern gets sparse (54%/45% black); T=60 at 62% black
+# is the balance. The icon was replaced 2026-11-27 20:19 with a fresh
+# capture from ScreenShot0020 (has an x4 stack count top-left; the old
+# one from ScreenShot0004 is backed up at
+# ~/workspace/user/files/buff4s_error-2026-11-27-old.png). The two
+# captures differ a lot (cross err 0.615 at T=80) -- the icon's
+# brightness varies between sessions, so if error stops being found,
+# re-capture it and re-run this generator.
+print()
+print('buff4s_error pattern (threshold 60):')
+err_im = Image.open(BASE + 'buff4s_error.png').convert('RGB')
+err_px = err_im.load()
+err_bm = [[1 if gray(err_px[x, y]) <= 60 else 0 for x in range(32)] for y in range(32)]
+T = 60
+err_s = encode(err_bm, 32, 'buff4s_error')
+T = 80
+print(f'buff4s_error := "{err_s}"')
+err_t, err_bm2 = decode(err_s)
+assert err_bm2 == err_bm, 'round-trip mismatch for buff4s_error'
+assert err_t == 60, 'error pattern threshold is not 60'
+# Separation must be measured against the buffs binarized at the SAME
+# threshold FindText will use for this pattern (60), not the buffs' own
+# T=80 images -- FindText binarizes the search region at the pattern's
+# threshold.
+err_worst = 1.0
+for other in NAMES:
+    for src_path in (BASE + FILES[other], BASE + other + '_4.png'):
+        src_im = Image.open(src_path).convert('RGB')
+        src_px = src_im.load()
+        src_bm = [[1 if gray(src_px[x, y]) <= 60 else 0 for x in range(32)] for y in range(32)]
+        a1, a0 = per_class_err(err_bm, src_bm)
+        err_worst = min(err_worst, max(a1, a0))
+print(f'  buff4s_error: sep_worst vs buffs={err_worst:.3f} (tol 0.3) {"SAFE" if err_worst > 0.3 else "WOULD MISIDENTIFY"}')
