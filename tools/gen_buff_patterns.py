@@ -260,6 +260,39 @@ e1, e0 = per_class_err(bms['buff_num6'], bm_n6_3)
 f1, f0 = per_class_err(png_bms['buff_num6'], bm_n6_3)
 print(f'  BuffNum6Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
 
+# Third pattern for num7 only: images/buff_num7_0007.png (ScreenShot0007,
+# 2026-11-28 1.zip batch, top-center target buff area at (619,76)). The
+# user sent 9 screenshots, all num7, and asked to optimize num7. Measured
+# at T=80: the stored num7 patterns (2026-11-26) match the live num7 icon
+# at (619,76) in ScreenShot0007 at err 0.228 (jpg) / 0.334 (png) -- above
+# the 0.2 tol, so the script misses it. The (619,76) icon is clearly
+# num7: it matches the stored num7 jpg best (0.228) and is distinct from
+# all other buffs (0.500+, closest num5 third pattern). Its black density
+# is 223/1024 (22%), sparser than num4/num6 thirds but denser than the
+# num5 third (14%). It also matches the same (619,76) icon in
+# ScreenShot0001 and 0004 (err 0.107/0.114), which the stored patterns
+# already find (0.083/0.087) -- the third pattern mainly covers the
+# 0007 variant. Note: num7 already has a right-strip sub-pattern
+# (BuffNum7Right); this third full pattern is tried after the two full
+# patterns and before the right strip in FindBuff.
+# Separation at T=80: worst 0.500 vs other buffs (closest num5 third),
+# above the 0.2 tol -- safe.
+print()
+print('Third num7 pattern (buff_num7_0007.png, T=80, ScreenShot0007):')
+s_n7_3, bm_n7_3 = pattern_for(BASE + 'buff_num7_0007.png', 'buff_num7_0007')
+print(f'BuffNum7Third := "{s_n7_3}"')
+n7_3_worst = 1.0
+for other in NAMES:
+    if other == 'buff_num7':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        e1, e0 = per_class_err(bm_n7_3, src_bm)
+        n7_3_worst = min(n7_3_worst, max(e1, e0))
+print(f'  BuffNum7Third: sep_worst vs other buffs={n7_3_worst:.3f} (tol 0.2) {"SAFE" if n7_3_worst > 0.2 else "WOULD MISIDENTIFY"}')
+e1, e0 = per_class_err(bms['buff_num7'], bm_n7_3)
+f1, f0 = per_class_err(png_bms['buff_num7'], bm_n7_3)
+print(f'  BuffNum7Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
+
 # Sub-patterns: only num7 and num8 get a third pattern (the right strip,
 # 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
 # so the right strip is fully digit-free.

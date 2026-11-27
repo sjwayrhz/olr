@@ -42,6 +42,7 @@ BuffText2 := [
     , "|<buff_num7_png>*80$32.k0000M00000zy03wD000z3U007my2P1wC20MD3301VkUW0AQ2001X9VW+8kkTM048XlUF0/aT002l7k00RL4E06rrG010wlkAzTa225rxUEUBsS489zzE2EU7zUU23Cs80C162810D0U3020+3U032qE67kbk03wU0000S0802C"
     , "|<buff_num8_png>*80$32.k0000E00000zzzzwDkTyD3lnzDkwCTrwC0xnz3UiBzks71zwC1UDz3kk1zky80TwDjE3z3zY0Tkzl3nwDtF7z3yqLzkz04vwDzNaT3zoxnkht8So01lz00003s0020jU002FU04/wM003X0000kE00AM3000400000000800006"
 ]
+BuffNum7Third := "|<buff_num7_0007>*80$32.00000000000zs03wD000z30007kw2E0wC008D3301VkU00AQ200131UU00kkNE0483U0001cR000m7k00CV4E03eLG00OAkE06zY221jx0EU3sI487zx02007UUU02AM80606200060U1020+2U012oE43kZk03w00000000002"
 BuffNum6Third := "|<buff_num6_0026>*80$32.00000000000zzzzwDzzzz3s7zzkw0TzwCEn073js01knz00QBzw073TzU1kjzk0w/zs0D0w203kTt3kw7yl4D1z6LnkzwYowDz9Zb3ymx8kxVcNA6TryM1k3020y1U2UDlU003yk080zt67UDtUUq3wk40ky800400000000002"
 BuffNum4Third := "|<buff_num4_0003>*80$32.00000000001zzzzsTzzzy7zzkDVzzk1sQ0T1C700DvVk07ysQ07zq703zxVs0TzcS6Xzu7V8Ty1sW7zkSGWDw7hgjz1y09zsQyn9y69huDVYvEVsHDzsQ0U1UD0O0A7s000ly0867zUD68zsBV13y61UQTV0017s00000000002"
 BuffNum5Third := "|<buff_num5_0011>*80$32.000000000000000000000000000000000600000M00023U000U4k0080M00141U00/k8E00Y1/00F7k40BF6006qLn010oo00TRYU00rx00058N001lwE1U04n0E004E0U00F000000s0000/FUU03Qk400Qs00000000000002"
@@ -203,7 +204,7 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, BuffNum4Third, BuffNum5Third, BuffNum6Third, BuffNum7Right, MemX, MemY, NearR, FoundNear
+    global BuffText, BuffText2, BuffNum4Third, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum7Right, MemX, MemY, NearR, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     pats := [BuffText[i], BuffText2[i]]
@@ -213,8 +214,10 @@ FindBuff(i, err, &fx, &fy) {
         pats.Push(BuffNum5Third)
     if (i = 3)
         pats.Push(BuffNum6Third)
-    if (i = 4)
+    if (i = 4) {
+        pats.Push(BuffNum7Third)
         pats.Push(BuffNum7Right)
+    }
     if (MemX[i] >= 0) {
         x1 := Max(MemX[i] - NearR, 0)
         y1 := Max(MemY[i] - NearR, 0)

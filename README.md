@@ -56,9 +56,11 @@ ArcheAge: One Last Ride 的钓鱼助手（AHK v2）。v0.04。
 
 ### buff_num7（小键盘 7）
 
-<img src="images/buff_num7_1.jpg" width="128"> <img src="images/buff_num7_4.png" width="128">
+<img src="images/buff_num7_1.jpg" width="128"> <img src="images/buff_num7_4.png" width="128"> <img src="images/buff_num7_0007.png" width="128">
 
-左：活图标；右：老图。两张全图，**再加一张右边一整条**：
+左：活图标；中：老图；**右：第三张全图**（2026-11-28，她发来 1.zip 的 9 张截图让我优化 7 号）。第三张是 ScreenShot0007 里上方中间那行 (619,76) 的 7 号——前两张图案对它误差 0.228–0.334，已经超过 0.2 容错，认不出来。第三张跟其他 buff 的分离度 0.317（最接近 5 号第三张），安全线 0.2 以上，没问题。黑点 223/1024（22%），比 4、6 号第三张稀一点，但比 5 号第三张（14%）密。同一位置的 7 号在 ScreenShot0001、0004 里也一样（误差 0.107/0.114），那两张旧图案已经能认出来（0.083/0.087），第三张主要是补 0007 这个变体。
+
+**再加一张右边一整条**：
 
 <img src="images/buff_num7_combo_right.png" width="520">
 
