@@ -19,6 +19,16 @@
 ; 0.1 num7, 0.1 num8).
 ; Every action is logged to olr_fishing_log.txt next to the script.
 ;
+; Priority levels, smaller number = higher priority:
+;   1. num7/num8: press immediately when found.
+;   2. buff4s_error (red down-arrow, no key bound): when found,
+;      immediately scan the 5 buffs (7,8,4,5,6) and press based on
+;      what is found.
+;   3. A buff different from the last one acted on: press immediately.
+;   4. The same buff as the last one: press only after its rest
+;      (RestShort/RestLong) has elapsed.
+; The rest times themselves are unchanged (RestShort 2.6s, RestLong 5.1s).
+;
 ; Buff -> key (numpad keys, right side of the keyboard):
 ;   buff_num4 -> Numpad4, wait 2s, Space, rest 2.6s
 ;   buff_num5 -> Numpad5, wait 2s, Space, rest 2.6s
@@ -29,7 +39,9 @@
 ; action the script waits the full rest (2.6s / 5.1s) before pressing
 ; one of them. The high-priority buffs (num7/num8) are checked first
 ; and interrupt a rest at once, so they are pressed the moment they
-; appear.
+; appear. A buff different from the last one acted on is also pressed
+; at once (Priority 3); only the same buff has to wait out its rest
+; (Priority 4).
 ;
 ; FindText patterns: threshold 80, generated from the fresh 32x32
 ; live-buff crops (images/buff_num*_1.jpg, tools/gen_buff_patterns.py).
@@ -54,17 +66,12 @@ global FoundNear := false
 global Scanning := false
 
 ; Rest state: after acting on a buff, the script rests until RestUntil
-; (a tick count). The rest is a real wait for the low-priority buffs
-; (num4/5/6): while resting, only the high-priority buffs (num7/num8)
-; are looked for, and finding one interrupts the rest at once. The
+; (a tick count). The rest only blocks the SAME buff (RestBuff): while
+; it runs, a different buff is pressed at once (Priority 3), and the
+; same buff is pressed only after the rest ends (Priority 4). The
 ; buff just acted on (RestBuff) is still on screen during its rest.
-; BoostNext: after pressing num7/num8, the next action (whatever buff
-; it is) is high priority and may interrupt the rest. Once that next
-; action is a num4/5/6, the boost is used up and normal priority
-; rules apply again.
 global RestUntil := 0
 global RestBuff := 0
-global BoostNext := false
 
 ; Tolerance per buff, one number per key (no groups). num5 is 0.2.
 ; 2026-11-26: a tolerance of 0.4 was tried and reverted the same
@@ -114,6 +121,15 @@ BuffText := [
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
+
+; buff4s_error: the red down-arrow buff that appears under the fish bar
+; (images/buff4s_error.png, 32x32, threshold 80, same as the other
+; buffs). No key is bound to it -- it is only detected. When it appears,
+; the script immediately scans the 5 buffs and acts on what it finds
+; (Priority 2). Well separated from all 5 buffs (worst cross-error
+; 0.536, far above the 0.2 tolerance), so it is never confused with them.
+ErrorText := "|<buff4s_error>*80$32.zzzzzk0000A00001TzzzyLzzzzZzzzztTzzzyLzzzzZzjzztTvzzyLyzzzZzjzztTvzzyLyzzzZzjzztTzzry7yzxzZzDz7sTzzzyLzzzzVzzzrtTzzvyLzzzzZzzzztTxzzyLzjjzZzzzztTzXzy7zkTzZzs3ztTy0TyE00006"
+ErrorErr := 0.2
 
 ; Blood bar search region: the rectangle from (680,124) to (850,241).
 ; Narrower than the buff strip -- the blue bar only ever appears here,
@@ -185,12 +201,11 @@ StartFishTimer4() {
 
 ; ` toggles the whole script. Turning it off also stops fishing.
 SC029:: {
-    global MasterOn, FishingOn, RestUntil, BoostNext
+    global MasterOn, FishingOn, RestUntil
     MasterOn := !MasterOn
     if (!MasterOn) {
         FishingOn := false
         RestUntil := 0
-        BoostNext := false
         ShowTip("脚本已暂停")
     } else {
         ShowTip("脚本已开启")
@@ -204,7 +219,7 @@ SC029:: {
 BloodCheck() {
     global MasterOn, FishingOn, BloodText, BloodErr
     global BloodX1, BloodY1, BloodX2, BloodY2
-    global RestUntil, BoostNext
+    global RestUntil
     if (!MasterOn) {
         return
     }
@@ -219,7 +234,6 @@ BloodCheck() {
     } else if (!found && FishingOn) {
         FishingOn := false
         RestUntil := 0
-        BoostNext := false
         ShowTip("血条消失，钓鱼功能关闭")
     }
 }
@@ -241,50 +255,76 @@ FishTimer() {
         return
     }
     Scanning := true
-    ScanPass("tight")
+    ScanPass()
     Scanning := false
 }
 
 ; One scan pass over all 5 buffs, each at its own tolerance
 ; (BuffErr[i]: 0.1 num4, 0.2 num5, 0.1 num6, 0.1 num7, 0.1 num8).
 ; Acts on the first match and returns true.
-; Priority: num7 and num8 are high priority and are checked first;
-; num4/num5/num6 are low priority and are checked after them.
-; Rest: after an action the script waits RestShort/RestLong before
-; acting on a low-priority buff. A high-priority buff (num7/num8)
-; found during the rest interrupts it at once and is acted on
-; immediately; the low-priority ones never interrupt, so the rest
-; is a real wait for them. Exception: right after pressing num7/num8
-; the next action (whatever buff it is) is high priority too
-; (BoostNext) -- once that action is a num4/5/6 the boost is used
-; up and normal priority rules apply again. The buff just acted on
-; (RestBuff) is never re-pressed during its own rest.
-ScanPass(label) {
-    global BuffText, BuffErr, RestUntil, RestBuff, BoostNext
-    if (RestUntil > 0 && A_TickCount >= RestUntil) {
-        RestUntil := 0
-    }
-    resting := (RestUntil > 0)
-    ; High priority first, then low priority. Indices: 1=num4, 2=num5,
-    ; 3=num6, 4=num7, 5=num8. So check 4,5 (num7,num8) before 1,2,3.
-    order := [4, 5, 1, 2, 3]
-    for _, i in order {
-        ; Never re-press the buff just acted on during its rest.
-        if (resting && i = RestBuff) {
-            continue
-        }
-        ; Low-priority buffs (indices 1,2,3 = num4/5/6) only interrupt
-        ; a rest while the boost from num7/num8 is still on.
-        if (resting && i <= 3 && !BoostNext) {
-            continue
-        }
+; Priority levels, smaller number = higher priority:
+;   1. num7/num8: press immediately when found.
+;   2. buff4s_error: when found, immediately scan the 5 buffs
+;      (7,8,4,5,6) and press based on what is found.
+;   3. A buff different from the last one acted on: press immediately.
+;   4. The same buff as the last one: press only after its rest
+;      (RestShort/RestLong) has elapsed.
+; The rest times themselves are unchanged.
+ScanPass() {
+    global BuffText, BuffErr, RestUntil, RestBuff
+    global ErrorText, ErrorErr
+    ; Priority 1: num7/num8 first, press immediately.
+    ; Indices: 1=num4, 2=num5, 3=num6, 4=num7, 5=num8.
+    for _, i in [4, 5] {
         if (FindBuff(i, BuffErr[i], &fx, &fy)) {
-            LogAction(i, fx, fy, resting ? label "-interrupt" : label)
+            LogAction(i, fx, fy, "p1")
+            DoBuffAction(i)
+            return true
+        }
+    }
+    ; Priority 2: buff4s_error. If found, immediately scan the 5 buffs
+    ; (7,8,4,5,6) and press the first one that may be pressed.
+    if (FindError(&ex, &ey)) {
+        for _, i in [4, 5, 1, 2, 3] {
+            if (FindBuff(i, BuffErr[i], &fx, &fy) && CanPress(i)) {
+                LogAction(i, fx, fy, "p2")
+                DoBuffAction(i)
+                return true
+            }
+        }
+        return false
+    }
+    ; Priority 3/4: num4/5/6. Press if different from the last buff,
+    ; or the same buff but its rest time has elapsed.
+    for _, i in [1, 2, 3] {
+        if (FindBuff(i, BuffErr[i], &fx, &fy) && CanPress(i)) {
+            pr := (i != RestBuff) ? "p3" : "p4"
+            LogAction(i, fx, fy, pr)
             DoBuffAction(i)
             return true
         }
     }
     return false
+}
+
+; May buff i be pressed now?
+; Priority 3: a buff different from the last one acted on is pressed
+; immediately. Priority 4: the same buff is pressed only after its
+; rest (RestShort/RestLong) has elapsed.
+CanPress(i) {
+    global RestUntil, RestBuff
+    if (i != RestBuff) {
+        return true
+    }
+    return A_TickCount >= RestUntil
+}
+
+; Find the buff4s_error icon in the top strip. No key is bound to it;
+; it only triggers an immediate scan of the 5 buffs (Priority 2).
+FindError(&ex, &ey) {
+    global ErrorText, ErrorErr
+    global SearchX1, SearchY1, SearchX2, SearchY2
+    return TryFind(ErrorText, SearchX1, SearchY1, SearchX2, SearchY2, ErrorErr, &ex, &ey)
 }
 
 ; Search buff i: nearby first if its position is remembered, else the
@@ -349,26 +389,18 @@ LogAction(i, fx, fy, label) {
 }
 
 DoBuffAction(i) {
-    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, RestBuff, BoostNext
+    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, RestBuff
     Send("{" BuffKey[i] "}")
     if (BuffSpace[i]) {
         Sleep(2000)
         Send("{Space}")
     }
     ; Start the rest without blocking: record which buff and when the
-    ; rest ends. During the rest only the high-priority buffs
-    ; (num7/num8) are looked for and can interrupt it; the
-    ; low-priority buffs (num4/5/6) wait out the full rest (see
-    ; ScanPass). Short rest after the Space buffs (num4/5/6), long
-    ; rest after the rest-only buffs (num7/num8).
+    ; rest ends. The rest only blocks the SAME buff (see CanPress):
+    ; a different buff is pressed at once (Priority 3), the same buff
+    ; only after the rest ends (Priority 4). Short rest after the
+    ; Space buffs (num4/5/6), long rest after the rest-only buffs
+    ; (num7/num8).
     RestBuff := i
     RestUntil := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
-    ; Pressing num7/num8 (indices 4,5) boosts the NEXT action to high
-    ; priority, whatever buff it is. Pressing a num4/5/6 (indices
-    ; 1,2,3) uses the boost up and restores normal priority rules.
-    if (i >= 4) {
-        BoostNext := true
-    } else {
-        BoostNext := false
-    }
 }
