@@ -5,13 +5,23 @@ Sources: ~/workspace/olr/images/buff_num*_1.jpg
 "1s" countdown text on them -- these are what the script actually sees
 in game, so the patterns are made from them instead of the older
 buff_num*.png crops).
-num7 has a second pattern: images/buff_num7.png (the older crop, mean
-gray 107, darker than buff_num7_1.jpg at 117). Both at T=80. The two
-patterns cover each other (png-vs-jpg 0.162, jpg-vs-png 0.090, both
-under the 0.2 tolerance), the png pattern is safe against the other
-buffs (worst separation 0.392 vs num4), and it matches all 5 num7
-variants from the 2026-11-27 screenshots (0.089-0.197). The script
-tries both (BuffNum7Text, OR logic) for num7.
+Each buff has a SECOND pattern from the older images/buff_num*.png
+(the 2026-11-26 18:05 crops, darker, different countdown digit).
+Both at T=80. The script tries both (BuffText + BuffText2, OR logic)
+for every buff -- num7 got its second pattern first (2026-11-27 16:00,
+it did improve the hit rate), the other four got theirs 2026-11-27
+evening.
+
+Second-pattern check (T=80, per-buff tolerance: 4/6 = 0.1, 5/7/8 = 0.2):
+- png pattern vs own jpg image: num5 0.167, num7 0.162, num8 0.111
+  (all under their tolerance, full overlap); num4 0.108, num6 0.115
+  (just over 0.1 -- the png pattern does NOT also match the jpg image,
+  but the jpg pattern DOES match the png image (0.082/0.083), so the
+  second pattern is a second anchor for in-between variants, not a
+  replacement. Gain for 4/6 is smaller than for 7, but it is safe.)
+- png pattern vs every other buff (jpg and png images): worst 0.318
+  (num8_png vs num4), all above their tolerance -- no false matches.
+- png pattern vs buff4s_error: worst 0.711, safe.
 
 Method: same encoder as fenix gen_recycle_patterns.py.
 Threshold 80: the 5 new images all carry the white "1s" text, which
@@ -118,11 +128,34 @@ print('AHK lines (paste into olr_fishing.ahk):')
 print('BuffText := [')
 print('\n'.join(lines))
 print(']')
-# num7 second pattern (buff_num7.png, T=80). BuffText[4] holds the
-# buff_num7_1.jpg pattern; BuffNum7Text holds both (OR logic).
-s_png, bm_png = pattern_for(BASE + 'buff_num7.png', 'buff_num7_png')
-jpg_pat = re.search(r'"(\|<buff_num7>\*80\$32\.[\w+/]+)"', lines[3]).group(1)
-print('BuffNum7Text := [')
-print(f'    "{jpg_pat}"')
-print(f'    , "{s_png}"')
+# Second pattern for every buff: images/buff_num*.png (older crops),
+# same T=80. The script tries BuffText[i] and BuffText2[i] (OR logic).
+png_lines = []
+png_bms = {}
+for name in NAMES:
+    s_png, bm_png = pattern_for(BASE + name + '.png', name + '_png')
+    png_bms[name] = bm_png
+    png_lines.append(f'    , "{s_png}"')
+png_lines[0] = png_lines[0].replace('    , "', '    "', 1)
+print('BuffText2 := [')
+print('\n'.join(png_lines))
 print(']')
+
+TOL = {'buff_num4': 0.1, 'buff_num5': 0.2, 'buff_num6': 0.1,
+       'buff_num7': 0.2, 'buff_num8': 0.2}
+print()
+print('Second-pattern check (png pattern vs own jpg image):')
+for name in NAMES:
+    e1, e0 = per_class_err(png_bms[name], bms[name])
+    f1, f0 = per_class_err(bms[name], png_bms[name])
+    print(f'  {name}: png->jpg max={max(e1, e0):.3f} jpg->png max={max(f1, f0):.3f} tol={TOL[name]}')
+print('Second-pattern check (png pattern vs other buffs, jpg+png images):')
+for name in NAMES:
+    worst = 0.0
+    for other in NAMES:
+        if other == name:
+            continue
+        e1, e0 = per_class_err(png_bms[name], bms[other])
+        f1, f0 = per_class_err(png_bms[name], png_bms[other])
+        worst = max(worst, e1, e0, f1, f0)
+    print(f'  {name}_png vs others: worst max err={worst:.3f} tol={TOL[name]} {"SAFE" if worst > TOL[name] else "WOULD MISIDENTIFY"}')

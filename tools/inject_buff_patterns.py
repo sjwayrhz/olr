@@ -16,6 +16,11 @@ num7 has two patterns (BuffNum7Text, both T=80): the buff_num7_1.jpg
 pattern (same as BuffText[4]) and the buff_num7.png pattern. FindBuff
 tries both for num7 (OR logic). This script injects both blocks and
 verifies each line matches the generator output exactly.
+
+2026-11-27 evening: every buff now has a second pattern
+(images/buff_num*.png, T=80) in BuffText2, tried for all five buffs.
+BuffNum7Text is retired: this script deletes that block from the AHK
+file when it injects BuffText2.
 """
 import re
 import subprocess
@@ -25,7 +30,7 @@ AHK = "/home/hatch/workspace/olr/olr_fishing.ahk"
 GEN = "/home/hatch/workspace/olr/tools/gen_buff_patterns.py"
 # Canonical order for BuffText, must match BuffName in olr_fishing.ahk.
 ORDER = ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
-NUM7_ORDER = ["buff_num7", "buff_num7_png"]
+PNG_ORDER = ["buff_num4_png", "buff_num5_png", "buff_num6_png", "buff_num7_png", "buff_num8_png"]
 
 out = subprocess.run([sys.executable, GEN], capture_output=True, text=True, check=True).stdout
 
@@ -57,6 +62,12 @@ def inject_block(src, header, new_lines):
     new_block = header + " := [\n" + "\n".join(new_lines) + "\n]"
     return src[:m.start()] + new_block + src[m.end():]
 
+def delete_block(src, header):
+    m = re.search(re.escape(header) + r" := \[\n.*?\n\]\n?", src, re.S)
+    if not m:
+        return src
+    return src[:m.start()] + src[m.end():]
+
 def verify_block(after, header, order, new_lines):
     m = re.search(re.escape(header) + r" := \[\n(.*?)\n\]", after, re.S)
     got = [ln for ln in m.group(1).splitlines() if ln.strip()]
@@ -70,20 +81,27 @@ def verify_block(after, header, order, new_lines):
 gen_lines, by_name = parse_block(out, "BuffText")
 assert len(gen_lines) == 5, f"expected 5 BuffText lines, got {len(gen_lines)}"
 assert set(by_name) == set(ORDER), f"generator BuffText names {sorted(by_name)} != order {ORDER}"
-num7_lines, num7_by_name = parse_block(out, "BuffNum7Text")
-assert len(num7_lines) == 2, f"expected 2 BuffNum7Text lines, got {len(num7_lines)}"
-assert set(num7_by_name) == set(NUM7_ORDER), f"generator BuffNum7Text names {sorted(num7_by_name)} != {NUM7_ORDER}"
+png_lines, png_by_name = parse_block(out, "BuffText2")
+assert len(png_lines) == 5, f"expected 5 BuffText2 lines, got {len(png_lines)}"
+assert set(png_by_name) == set(PNG_ORDER), f"generator BuffText2 names {sorted(png_by_name)} != {PNG_ORDER}"
 
 new_text = emit_block(ORDER, by_name)
-new_num7 = emit_block(NUM7_ORDER, num7_by_name)
+new_png = emit_block(PNG_ORDER, png_by_name)
 
 src = open(AHK, encoding="utf-8-sig").read()
 src = inject_block(src, "BuffText", new_text)
-src = inject_block(src, "BuffNum7Text", new_num7)
+src = delete_block(src, "BuffNum7Text")
+if "BuffText2 := [" in src:
+    src = inject_block(src, "BuffText2", new_png)
+else:
+    anchor = "BuffText := [\n" + "\n".join(new_text) + "\n]"
+    idx = src.index(anchor) + len(anchor)
+    src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
 after = open(AHK, encoding="utf-8-sig").read()
 verify_block(after, "BuffText", ORDER, new_text)
-verify_block(after, "BuffNum7Text", NUM7_ORDER, new_num7)
-print("injected BuffText (5 patterns at T=80) and BuffNum7Text (2 patterns at T=80),")
-print("first elements have no leading comma; verified byte-identical to generator output")
+verify_block(after, "BuffText2", PNG_ORDER, new_png)
+assert "BuffNum7Text" not in after, "BuffNum7Text block was not removed"
+print("injected BuffText (5 patterns at T=80) and BuffText2 (5 png patterns at T=80),")
+print("BuffNum7Text removed; first elements have no leading comma; verified byte-identical to generator output")
