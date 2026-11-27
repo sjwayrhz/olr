@@ -48,7 +48,7 @@ BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
 
-ErrorText := "|<buff4s_error>*60$32.000003zzzzkzxzzwDyTzz3z6jzkYZfzwANTzz341yzktRzjwARTvz2H7yzkzrzjwDxzvz3zTyzkzbzbwDVq8z3zw3zkzz0QwDjkCT3ww3Dkza3bwDwnnz3zbNzkzxwzwDzjzz3zyTzkzz3zwDzUTz3zk3zk0000000000000002"
+ErrorText := "|<buff4s_error>*40$32.Dlk9z3yM0Tky401wDV00D3rk0Hkws08wDa00T3wk07kzY03wDsUFz3z4NzkzswTwDz6Tz3zsDzkzz3zwDzUTz3zk1zk0000000000000002"
 ErrorErr := 0.3
 
 BloodRX1 := 0.30
