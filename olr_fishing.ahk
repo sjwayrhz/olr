@@ -3,9 +3,11 @@
 ;
 ; SC029 (` key, top-left under Esc) : toggle the whole script on / off
 ; Fishing mode is automatic: every 500 ms the script looks for the
-; blue bar (blood bar) in its rectangle (680,124)-(850,241); finding
-; it enters fishing mode, losing it leaves fishing mode. Each change
-; shows a tooltip at the mouse cursor for 2 seconds, then it
+; blue bar (blood bar) in a search region defined as fractions of the
+; game window's client area (re-located on every check, so dragging
+; the window, going full screen, or changing resolution just works);
+; finding it enters fishing mode, losing it leaves fishing mode. Each
+; change shows a tooltip at the mouse cursor for 2 seconds, then it
 ; disappears (it does not stay at the cursor).
 ;
 ; Fishing searches the top strip (x 518-1165, y 0-392) for the 5 buff
@@ -131,14 +133,18 @@ BuffSpace := [true, true, true, false, false]
 ErrorText := "|<buff4s_error>*80$32.zzzzzk0000A00001TzzzyLzzzzZzzzztTzzzyLzzzzZzjzztTvzzyLyzzzZzjzztTvzzyLyzzzZzjzztTzzry7yzxzZzDz7sTzzzyLzzzzVzzzrtTzzvyLzzzzZzzzztTxzzyLzjjzZzzzztTzXzy7zkTzZzs3ztTy0TyE00006"
 ErrorErr := 0.2
 
-; Blood bar search region: the rectangle from (680,124) to (850,241).
-; Narrower than the buff strip -- the blue bar only ever appears here,
-; so searching just this rectangle is faster and cannot false-match
-; anything elsewhere on screen.
-BloodX1 := 680
-BloodY1 := 124
-BloodX2 := 850
-BloodY2 := 241
+; Blood bar search region, as fractions of the game window's client area.
+; The blue bar sits at x 0.367-0.632, y 0.064-0.078 of the client area
+; (measured in a 1600x900 game window; the same ratios hold in the
+; 1920x1080 windowed shot and scale to other resolutions). The search
+; region below adds a margin around it, so the bar is found even if the
+; UI shifts a little. The game window is re-located on every check, so
+; dragging the window or switching to full screen just works -- no
+; fixed pixel coordinates are used for the blood bar any more.
+BloodRX1 := 0.30
+BloodRX2 := 0.70
+BloodRY1 := 0.04
+BloodRY2 := 0.10
 
 ; Blood bar pattern, 32x12, threshold 125, from images/buff_blood.png
 ; (replaced 2026-11-27: the old one was a 49x15 red HP bar, this one
@@ -171,9 +177,10 @@ SetTimer(StartFishTimer2, -2)
 SetTimer(StartFishTimer3, -5)
 SetTimer(StartFishTimer4, -7)
 
-; Blood bar check: every 500 ms, look for the blue bar in its
-; rectangle (680,124)-(850,241). Finding it enters fishing mode
-; automatically (no F5 needed); losing it leaves fishing mode.
+; Blood bar check: every 500 ms, look for the blue bar in its search
+; region (fractions of the game window's client area, re-located on
+; every check). Finding it enters fishing mode automatically (no F5
+; needed); losing it leaves fishing mode.
 ; Runs only while the script itself is on (MasterOn).
 SetTimer(BloodCheck, 500)
 
@@ -213,20 +220,21 @@ SC029:: {
 }
 
 ; Blood bar check, every 500 ms. When the blue bar appears in its
-; rectangle (680,124)-(850,241), enter fishing mode automatically
-; and show a tip at the mouse cursor. When it disappears, leave
-; fishing mode.
+; search region (fractions of the game window, re-located every time),
+; enter fishing mode automatically and show a tip at the mouse cursor.
+; When it disappears, leave fishing mode.
 BloodCheck() {
     global MasterOn, FishingOn, BloodText, BloodErr
-    global BloodX1, BloodY1, BloodX2, BloodY2
     global RestUntil
     if (!MasterOn) {
         return
     }
+    bx1 := 0, by1 := 0, bx2 := 0, by2 := 0
+    GetBloodRect(&bx1, &by1, &bx2, &by2)
     bx := 0
     by := 0
     matches := ""
-    try matches := FindText(&bx, &by, BloodX1, BloodY1, BloodX2, BloodY2, BloodErr, BloodErr, BloodText)
+    try matches := FindText(&bx, &by, bx1, by1, bx2, by2, BloodErr, BloodErr, BloodText)
     found := IsObject(matches) && matches.Length > 0
     if (found && !FishingOn) {
         FishingOn := true
@@ -235,6 +243,30 @@ BloodCheck() {
         FishingOn := false
         RestUntil := 0
         ShowTip("血条消失，钓鱼功能关闭")
+    }
+}
+
+; Locate the blue blood bar's search region from the game window's
+; current client area. The region is fractions of the client area
+; (BloodRX1/RX2/RY1/RY2), so it follows the window when it is dragged
+; and scales when the resolution changes. Returns the region in
+; bx1/by1/bx2/by2 (screen coordinates). If the game window is not
+; found, falls back to the whole screen.
+GetBloodRect(&bx1, &by1, &bx2, &by2) {
+    global BloodRX1, BloodRX2, BloodRY1, BloodRY2
+    cx := 0, cy := 0, cw := 0, ch := 0
+    try WinGetClientPos(&cx, &cy, &cw, &ch, "ArcheAge")
+    if (cw > 0 && ch > 0) {
+        bx1 := cx + Round(cw * BloodRX1)
+        by1 := cy + Round(ch * BloodRY1)
+        bx2 := cx + Round(cw * BloodRX2)
+        by2 := cy + Round(ch * BloodRY2)
+    } else {
+        ; Game window not found: search the whole screen.
+        bx1 := 0
+        by1 := 0
+        bx2 := A_ScreenWidth
+        by2 := A_ScreenHeight
     }
 }
 
