@@ -13,12 +13,12 @@ Two rules this script enforces (both were broken by the first version):
    Format: first line `    "..."`, later lines `    , "..."`.
 
 num7 has two patterns (BuffNum7Text, both T=80): the buff_num7_1.jpg
-pattern (same as BuffText[4]) and the buff_num7.png pattern. FindBuff
+pattern (same as BuffText[4]) and the buff_num7_4.png pattern. FindBuff
 tries both for num7 (OR logic). This script injects both blocks and
 verifies each line matches the generator output exactly.
 
 2026-11-27 evening: every buff now has a second pattern
-(images/buff_num*.png, T=80) in BuffText2, tried for all five buffs.
+(images/buff_num*_4.png, T=80) in BuffText2, tried for all five buffs.
 BuffNum7Text is retired: this script deletes that block from the AHK
 file when it injects BuffText2.
 """

@@ -5,12 +5,16 @@ Sources: ~/workspace/olr/images/buff_num*_1.jpg
 "1s" countdown text on them -- these are what the script actually sees
 in game, so the patterns are made from them instead of the older
 buff_num*.png crops).
-Each buff has a SECOND pattern from the older images/buff_num*.png
+Each buff has a SECOND pattern from the older images/buff_num*_4.png
 (the 2026-11-26 18:05 crops, darker, different countdown digit).
 Both at T=80. The script tries both (BuffText + BuffText2, OR logic)
 for every buff -- num7 got its second pattern first (2026-11-27 16:00,
 it did improve the hit rate), the other four got theirs 2026-11-27
-evening.
+evening. (The _4 files were renamed from buff_num*.png 2026-11-27
+evening; the pattern labels stay buff_num*_png, so the script is
+byte-identical -- renaming the source files does not change the
+patterns, because the script carries the pattern strings, not the
+files.)
 
 Second-pattern check (T=80, per-buff tolerance: 4/6 = 0.1, 5/7/8 = 0.2):
 - png pattern vs own jpg image: num5 0.167, num7 0.162, num8 0.111
@@ -128,12 +132,12 @@ print('AHK lines (paste into olr_fishing.ahk):')
 print('BuffText := [')
 print('\n'.join(lines))
 print(']')
-# Second pattern for every buff: images/buff_num*.png (older crops),
+# Second pattern for every buff: images/buff_num*_4.png (older crops),
 # same T=80. The script tries BuffText[i] and BuffText2[i] (OR logic).
 png_lines = []
 png_bms = {}
 for name in NAMES:
-    s_png, bm_png = pattern_for(BASE + name + '.png', name + '_png')
+    s_png, bm_png = pattern_for(BASE + name + '_4.png', name + '_png')
     png_bms[name] = bm_png
     png_lines.append(f'    , "{s_png}"')
 png_lines[0] = png_lines[0].replace('    , "', '    "', 1)
