@@ -260,46 +260,38 @@ sub_pattern('buff_num7', (20, 0, 32, 32), 'buff_num7_right')
 # its two full 32x32 patterns (jpg + png); num7 keeps its right strip
 # (it never false-matched).
 
-# buff4s_error pattern (red downward arrow, images/buff4s_error.png).
-# The image is the part BELOW the x4 stack count (32x20, y12-32 of the
-# icon) -- the x4 itself is left out because the stack count changes
-# (x1/x2/x3/x4...). Threshold is 40, NOT 80 like the buffs: at T=40 the
-# separation from the buffs is 0.347 (best for this crop; 0.315 at T=80,
-# 0.298 at T=60). It is thin -- the closest is num8's old png image,
-# and the margin over the 0.3 tol is only 0.047. The full 32x32 icon
-# (with x4) separated better (0.502 at T=60) but the user wants the
-# x4-free crop, so this is the trade-off: no stack-count interference,
-# but weaker discrimination. If error starts being confused with num8,
-# or stops being found, re-capture the icon and re-run this generator.
-# The icon was replaced 2026-11-27 20:19 with a fresh capture from
-# ScreenShot0020 (bottom 20 rows only, no x4); the old full icon from
-# ScreenShot0004 is backed up at
-# ~/workspace/user/files/buff4s_error-2026-11-27-old.png.
+# buff4s_error pattern (red downward arrow, 32x32, images/buff4s_error.png).
+# Threshold is 80, same as the buffs. This is the ORIGINAL icon from
+# ScreenShot0004 (fish blood bar, rightmost of the 3 buffs, x=653-685,
+# y=75-107, no stack count). At T=80 the separation from the buffs is
+# 0.506 (0.573 at T=60, 0.455 at T=100) -- comfortably above the 0.3
+# tol. Restored 2026-11-28 at the user's request: she had the icon
+# changed twice (2026-11-27 20:19: first to a fresh ScreenShot0020
+# capture with x4 at T=60, then corrected to the below-x4 crop 32x20
+# at T=40), and now wants the FIRST version back. The ScreenShot0020
+# below-x4 crop (32x20, T=40) is NOT kept -- the file in images/ is
+# the original ScreenShot0004 full 32x32 icon again. If the icon's
+# brightness varies between sessions and error stops being found,
+# re-capture it and re-run this generator.
 print()
-print('buff4s_error pattern (threshold 40, 32x20, no x4):')
+print('buff4s_error pattern (threshold 80, 32x32, original ScreenShot0004):')
 err_im = Image.open(BASE + 'buff4s_error.png').convert('RGB')
 err_px = err_im.load()
-err_w, err_h = err_im.size
-err_bm = [[1 if gray(err_px[x, y]) <= 40 else 0 for x in range(err_w)] for y in range(err_h)]
-T = 40
-err_s = encode(err_bm, err_w, 'buff4s_error')
+err_bm = [[1 if gray(err_px[x, y]) <= 80 else 0 for x in range(32)] for y in range(32)]
 T = 80
+err_s = encode(err_bm, 32, 'buff4s_error')
 print(f'buff4s_error := "{err_s}"')
 err_t, err_bm2 = decode(err_s)
 assert err_bm2 == err_bm, 'round-trip mismatch for buff4s_error'
-assert err_t == 40, 'error pattern threshold is not 40'
+assert err_t == 80, 'error pattern threshold is not 80'
 # Separation must be measured against the buffs binarized at the SAME
-# threshold FindText will use for this pattern (40), not the buffs' own
-# T=80 images -- FindText binarizes the search region at the pattern's
-# threshold. Slide the err_h-tall window over the 32x32 buff images.
+# threshold FindText will use for this pattern (80).
 err_worst = 1.0
 for other in NAMES:
     for src_path in (BASE + FILES[other], BASE + other + '_4.png'):
         src_im = Image.open(src_path).convert('RGB')
         src_px = src_im.load()
-        src_bm = [[1 if gray(src_px[x, y]) <= 40 else 0 for x in range(32)] for y in range(32)]
-        for yy in range(0, 32 - err_h + 1):
-            win = [row[0:err_w] for row in src_bm[yy:yy + err_h]]
-            a1, a0 = per_class_err(err_bm, win)
-            err_worst = min(err_worst, max(a1, a0))
+        src_bm = [[1 if gray(src_px[x, y]) <= 80 else 0 for x in range(32)] for y in range(32)]
+        a1, a0 = per_class_err(err_bm, src_bm)
+        err_worst = min(err_worst, max(a1, a0))
 print(f'  buff4s_error: sep_worst vs buffs={err_worst:.3f} (tol 0.3) {"SAFE" if err_worst > 0.3 else "WOULD MISIDENTIFY"}')

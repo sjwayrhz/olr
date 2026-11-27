@@ -109,7 +109,7 @@ for header, (label, width) in SUBS.items():
     sub_matches[header] = m
     sub_lines[header] = f'{header} := {m.group(1)}'
 
-m_err = re.search(r'buff4s_error := ("\|<buff4s_error>\*40\$32\.[\w+/]+")', out)
+m_err = re.search(r'buff4s_error := ("\|<buff4s_error>\*80\$32\.[\w+/]+")', out)
 assert m_err, "generator output has no buff4s_error line"
 err_line = f'ErrorText := {m_err.group(1)}'
 
@@ -147,7 +147,7 @@ for header, (label, width) in SUBS.items():
     assert header in after, f"{header} missing after injection"
     m_after = re.search(re.escape(header) + r' := ("\|<[^>]+>\*80\$' + str(width) + r'\.[\w+/]+")', after)
     assert m_after and m_after.group(1) == sub_matches[header].group(1), f"injected {header} does not match generator output"
-m_err_after = re.search(r'ErrorText := ("\|<buff4s_error>\*40\$32\.[\w+/]+")', after)
+m_err_after = re.search(r'ErrorText := ("\|<buff4s_error>\*80\$32\.[\w+/]+")', after)
 assert m_err_after and m_err_after.group(1) == m_err.group(1), "injected ErrorText does not match generator output"
 m_n5_3_after = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', after)
 assert m_n5_3_after and m_n5_3_after.group(1) == m_n5_3.group(1), "injected BuffNum5Third does not match generator output"
@@ -155,6 +155,6 @@ for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
 print("BuffNum5Third (ScreenShot0011 bright fish, T=80),")
-print("ErrorText (buff4s_error at T=40, 32x20, no x4), BuffNum7Right (12x32);")
+print("ErrorText (buff4s_error at T=80, 32x32, original ScreenShot0004), BuffNum7Right (12x32);")
 print("BuffNum8Right removed 2026-11-28 (terrain false positives at y=168);")
 print("num4/5/6 sub-patterns removed; verified byte-identical to generator output")
