@@ -35,6 +35,10 @@ BuffText := [
     , "|<buff_num7>*80$32.00000000000zw03wD000z3U007kw2H0wC70MD3301VkUW0AQ220131VY88kmNM048XlUF0/cT002m7k00CZ4E03jLG0EOAkk8aza225jxUEUnsQ487zxE20U7zUU23Cs80C362810D0U3420+3U012qE63kbk13w00000080002"
     , "|<buff_num8>*80$32.00000000000zzzzwDkTy73lnzDkwCTrwC0xnz30iBzks71zwC1UDz3kk1zkw80DwDjU3z3zc0TkzG3nwDyV5z3zcLzkzu4vwDyVaT3zcxlkNm0S007Vz00003s0000jU0001U003oE003b0000Uk000s2000800000000000002"
 ]
+BuffNum7Text := [
+    "|<buff_num7>*80$32.00000000000zw03wD000z3U007kw2H0wC70MD3301VkUW0AQ220131VY88kmNM048XlUF0/cT002m7k00CZ4E03jLG0EOAkk8aza225jxUEUnsQ487zxE20U7zUU23Cs80C362810D0U3420+3U012qE63kbk13w00000080002"
+    , "|<buff_num7_png>*80$32.k0000M00000zy03wD000z3U007my2P1wC20MD3301VkUW0AQ2001X9VW+8kkTM048XlUF0/aT002l7k00RL4E06rrG010wlkAzTa225rxUEUBsS489zzE2EU7zUU23Cs80C162810D0U3020+3U032qE67kbk03wU0000S0802C"
+]
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
@@ -186,25 +190,30 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, MemX, MemY, NearR, FoundNear
+    global BuffText, BuffNum7Text, MemX, MemY, NearR, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
+    pats := (i = 4) ? BuffNum7Text : [BuffText[i]]
     if (MemX[i] >= 0) {
         x1 := Max(MemX[i] - NearR, 0)
         y1 := Max(MemY[i] - NearR, 0)
         x2 := Min(MemX[i] + NearR, A_ScreenWidth)
         y2 := Min(MemY[i] + NearR, A_ScreenHeight)
-        if (TryFind(BuffText[i], x1, y1, x2, y2, err, &fx, &fy)) {
-            MemX[i] := fx
-            MemY[i] := fy
-            FoundNear := true
-            return true
+        for _, pat in pats {
+            if (TryFind(pat, x1, y1, x2, y2, err, &fx, &fy)) {
+                MemX[i] := fx
+                MemY[i] := fy
+                FoundNear := true
+                return true
+            }
         }
     }
-    if (TryFind(BuffText[i], SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
-        MemX[i] := fx
-        MemY[i] := fy
-        return true
+    for _, pat in pats {
+        if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
+            MemX[i] := fx
+            MemY[i] := fy
+            return true
+        }
     }
     return false
 }

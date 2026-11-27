@@ -5,6 +5,13 @@ Sources: ~/workspace/olr/images/buff_num*_1.jpg
 "1s" countdown text on them -- these are what the script actually sees
 in game, so the patterns are made from them instead of the older
 buff_num*.png crops).
+num7 has a second pattern: images/buff_num7.png (the older crop, mean
+gray 107, darker than buff_num7_1.jpg at 117). Both at T=80. The two
+patterns cover each other (png-vs-jpg 0.162, jpg-vs-png 0.090, both
+under the 0.2 tolerance), the png pattern is safe against the other
+buffs (worst separation 0.392 vs num4), and it matches all 5 num7
+variants from the 2026-11-27 screenshots (0.089-0.197). The script
+tries both (BuffNum7Text, OR logic) for num7.
 
 Method: same encoder as fenix gen_recycle_patterns.py.
 Threshold 80: the 5 new images all carry the white "1s" text, which
@@ -110,4 +117,12 @@ print()
 print('AHK lines (paste into olr_fishing.ahk):')
 print('BuffText := [')
 print('\n'.join(lines))
+print(']')
+# num7 second pattern (buff_num7.png, T=80). BuffText[4] holds the
+# buff_num7_1.jpg pattern; BuffNum7Text holds both (OR logic).
+s_png, bm_png = pattern_for(BASE + 'buff_num7.png', 'buff_num7_png')
+jpg_pat = re.search(r'"(\|<buff_num7>\*80\$32\.[\w+/]+)"', lines[3]).group(1)
+print('BuffNum7Text := [')
+print(f'    "{jpg_pat}"')
+print(f'    , "{s_png}"')
 print(']')
