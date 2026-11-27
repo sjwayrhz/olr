@@ -163,3 +163,32 @@ for name in NAMES:
         f1, f0 = per_class_err(png_bms[name], png_bms[other])
         worst = max(worst, e1, e0, f1, f0)
     print(f'  {name}_png vs others: worst max err={worst:.3f} tol={TOL[name]} {"SAFE" if worst > TOL[name] else "WOULD MISIDENTIFY"}')
+
+# num7 third pattern: bottom sub-region (x 0-22, y 21-32, 22x11) of
+# buff_num7_1.jpg. The countdown digit lives in rows 3-21, so the
+# bottom rows are digit-free (0 white pixels in both num7 sources).
+# The script tries it for num7 alongside the two full patterns.
+# Verified: covers both num7 sources (0.000/0.123), sliding-window
+# separation vs every other buff's full image is >= 0.345 (tol 0.2).
+print()
+print('num7 bottom sub-pattern (digit-free, x 0-22, y 21-32):')
+bm7 = bms['buff_num7']
+bottom = [row[0:22] for row in bm7[21:32]]
+s_bottom = encode(bottom, 22, 'buff_num7_bottom')
+t3, bm3 = decode(s_bottom)
+assert bm3 == bottom, 'round-trip mismatch for buff_num7_bottom'
+print(f'BuffNum7Bottom := "{s_bottom}"')
+png7_bottom = [row[0:22] for row in png_bms['buff_num7'][21:32]]
+e1, e0 = per_class_err(bottom, png7_bottom)
+print(f'  bottom jpg-pattern vs png bottom: max={max(e1, e0):.3f} (tol 0.2)')
+worst = 1.0
+for other in NAMES:
+    if other == 'buff_num7':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        for y in range(0, 32 - 11 + 1):
+            for x in range(0, 32 - 22 + 1):
+                win = [row[x:x + 22] for row in src_bm[y:y + 11]]
+                a1, a0 = per_class_err(bottom, win)
+                worst = min(worst, max(a1, a0))
+print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) {"SAFE" if worst > 0.2 else "WOULD MISIDENTIFY"}')

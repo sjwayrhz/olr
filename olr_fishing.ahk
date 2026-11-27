@@ -42,6 +42,7 @@ BuffText2 := [
     , "|<buff_num7_png>*80$32.k0000M00000zy03wD000z3U007my2P1wC20MD3301VkUW0AQ2001X9VW+8kkTM048XlUF0/aT002l7k00RL4E06rrG010wlkAzTa225rxUEUBsS489zzE2EU7zUU23Cs80C162810D0U3020+3U032qE67kbk03wU0000S0802C"
     , "|<buff_num8_png>*80$32.k0000E00000zzzzwDkTyD3lnzDkwCTrwC0xnz3UiBzks71zwC1UDz3kk1zky80TwDjE3z3zY0Tkzl3nwDtF7z3yqLzkz04vwDzNaT3zoxnkht8So01lz00003s0020jU002FU04/wM003X0000kE00AM3000400000000800006"
 ]
+BuffNum7Bottom := "|<buff_num7_bottom>*80$22.87zwU81m08A80C0W0E20AE+3U0hY1WT0400002008"
 BuffName := ["buff_num4", "buff_num5", "buff_num6", "buff_num7", "buff_num8"]
 BuffKey := ["Numpad4", "Numpad5", "Numpad6", "Numpad7", "Numpad8"]
 BuffSpace := [true, true, true, false, false]
@@ -199,10 +200,10 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, MemX, MemY, NearR, FoundNear
+    global BuffText, BuffText2, BuffNum7Bottom, MemX, MemY, NearR, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
-    pats := [BuffText[i], BuffText2[i]]
+    pats := (i = 4) ? [BuffText[i], BuffText2[i], BuffNum7Bottom] : [BuffText[i], BuffText2[i]]
     if (MemX[i] >= 0) {
         x1 := Max(MemX[i] - NearR, 0)
         y1 := Max(MemY[i] - NearR, 0)

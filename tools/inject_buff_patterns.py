@@ -78,12 +78,25 @@ def verify_block(after, header, order, new_lines):
         assert f"|<{name}>" in ln, f"{header} line {ln[:40]} is not {name}"
         assert "*80$" in ln, f"{header} wrong threshold in line: {ln[:50]}"
 
+def inject_line(src, header, new_line):
+    """Replace (or insert after BuffText2) a single-line pattern assignment
+    like BuffNum7Bottom := "..."."""
+    m = re.search(re.escape(header) + r' := ".*"\n', src)
+    if m:
+        return src[:m.start()] + new_line + "\n" + src[m.end():]
+    anchor = "BuffText2 := [\n" + "\n".join(new_png) + "\n]"
+    idx = src.index(anchor) + len(anchor)
+    return src[:idx] + "\n" + new_line + src[idx:]
+
 gen_lines, by_name = parse_block(out, "BuffText")
 assert len(gen_lines) == 5, f"expected 5 BuffText lines, got {len(gen_lines)}"
 assert set(by_name) == set(ORDER), f"generator BuffText names {sorted(by_name)} != order {ORDER}"
 png_lines, png_by_name = parse_block(out, "BuffText2")
 assert len(png_lines) == 5, f"expected 5 BuffText2 lines, got {len(png_lines)}"
 assert set(png_by_name) == set(PNG_ORDER), f"generator BuffText2 names {sorted(png_by_name)} != {PNG_ORDER}"
+m_bottom = re.search(r'BuffNum7Bottom := ("\|<buff_num7_bottom>\*80\$22\.[\w+/]+")', out)
+assert m_bottom, "generator output has no BuffNum7Bottom line"
+bottom_line = f'BuffNum7Bottom := {m_bottom.group(1)}'
 
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
@@ -97,11 +110,14 @@ else:
     anchor = "BuffText := [\n" + "\n".join(new_text) + "\n]"
     idx = src.index(anchor) + len(anchor)
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
+src = inject_line(src, "BuffNum7Bottom", bottom_line)
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
 after = open(AHK, encoding="utf-8-sig").read()
 verify_block(after, "BuffText", ORDER, new_text)
 verify_block(after, "BuffText2", PNG_ORDER, new_png)
 assert "BuffNum7Text" not in after, "BuffNum7Text block was not removed"
-print("injected BuffText (5 patterns at T=80) and BuffText2 (5 png patterns at T=80),")
-print("BuffNum7Text removed; first elements have no leading comma; verified byte-identical to generator output")
+m_after = re.search(r'BuffNum7Bottom := ("\|<buff_num7_bottom>\*80\$22\.[\w+/]+")', after)
+assert m_after and m_after.group(1) == m_bottom.group(1), "injected BuffNum7Bottom does not match generator output"
+print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
+print("and BuffNum7Bottom (digit-free 22x11); BuffNum7Text removed; verified byte-identical to generator output")
