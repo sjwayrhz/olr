@@ -68,8 +68,8 @@ global Scanning := false
 
 ; Rest state: after acting on a buff, the script rests until RestUntil
 ; (a tick count). The rest only blocks the SAME buff (RestBuff): while
-; it runs, a different buff is pressed at once (Priority 3), and the
-; same buff is pressed only after the rest ends (Priority 4). The
+; it runs, a different buff is pressed at once (Priority 1/3), and the
+; same buff is pressed only after the rest ends (Priority 1/4). The
 ; buff just acted on (RestBuff) is still on screen during its rest.
 global RestUntil := 0
 global RestBuff := 0
@@ -282,10 +282,15 @@ FishTimer() {
 ScanPass() {
     global BuffText, BuffErr, RestUntil, RestBuff
     global ErrorText, ErrorErr
-    ; Priority 1: num7/num8 first, press immediately.
+    ; Priority 1: num7/num8 first. Same rest rule as the others: a
+    ; different buff ends the rest and is pressed at once; the same
+    ; buff is pressed only after its rest (RestShort/RestLong) has
+    ; elapsed. Without the CanPress check, num7/num8 would be pressed
+    ; again on every scan while still on screen, and the 5.1 s rest
+    ; would never be observed.
     ; Indices: 1=num4, 2=num5, 3=num6, 4=num7, 5=num8.
     for _, i in [4, 5] {
-        if (FindBuff(i, BuffErr[i], &fx, &fy)) {
+        if (FindBuff(i, BuffErr[i], &fx, &fy) && CanPress(i)) {
             LogAction(i, fx, fy, "p1")
             DoBuffAction(i)
             return true
