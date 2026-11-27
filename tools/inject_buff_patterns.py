@@ -68,6 +68,12 @@ def delete_block(src, header):
         return src
     return src[:m.start()] + src[m.end():]
 
+def delete_line(src, header):
+    m = re.search(re.escape(header) + r' := ".*"\n?', src)
+    if not m:
+        return src
+    return src[:m.start()] + src[m.end():]
+
 def verify_block(after, header, order, new_lines):
     m = re.search(re.escape(header) + r" := \[\n(.*?)\n\]", after, re.S)
     got = [ln for ln in m.group(1).splitlines() if ln.strip()]
@@ -103,9 +109,9 @@ right_line = f'BuffNum8Right := {m_right.group(1)}'
 m_b4 = re.search(r'buff_num4_bottom := ("\|<buff_num4_bottom>\*80\$32\.[\w+/]+")', out)
 assert m_b4, "generator output has no buff_num4_bottom line"
 b4_line = f'BuffNum4Bottom := {m_b4.group(1)}'
-m_t5 = re.search(r'buff_num5_top := ("\|<buff_num5_top>\*80\$32\.[\w+/]+")', out)
-assert m_t5, "generator output has no buff_num5_top line"
-t5_line = f'BuffNum5Top := {m_t5.group(1)}'
+m_t5 = re.search(r'buff_num5_bottom := ("\|<buff_num5_bottom>\*80\$32\.[\w+/]+")', out)
+assert m_t5, "generator output has no buff_num5_bottom line"
+t5_line = f'BuffNum5Bottom := {m_t5.group(1)}'
 m_b6 = re.search(r'buff_num6_bottom := ("\|<buff_num6_bottom>\*80\$32\.[\w+/]+")', out)
 assert m_b6, "generator output has no buff_num6_bottom line"
 b6_line = f'BuffNum6Bottom := {m_b6.group(1)}'
@@ -126,8 +132,9 @@ else:
 src = inject_line(src, "BuffNum7Bottom", bottom_line)
 src = inject_line(src, "BuffNum8Right", right_line)
 src = inject_line(src, "BuffNum4Bottom", b4_line)
-src = inject_line(src, "BuffNum5Top", t5_line)
+src = inject_line(src, "BuffNum5Bottom", t5_line)
 src = inject_line(src, "BuffNum6Bottom", b6_line)
+src = delete_line(src, "BuffNum5Top")
 open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 
 after = open(AHK, encoding="utf-8-sig").read()
@@ -136,10 +143,10 @@ verify_block(after, "BuffText2", PNG_ORDER, new_png)
 assert "BuffNum7Text" not in after, "BuffNum7Text block was not removed"
 assert "BuffText3" not in after, "BuffText3 block was not removed"
 for header, m_gen in (("BuffNum7Bottom", m_bottom), ("BuffNum8Right", m_right),
-                      ("BuffNum4Bottom", m_b4), ("BuffNum5Top", m_t5), ("BuffNum6Bottom", m_b6)):
+                      ("BuffNum4Bottom", m_b4), ("BuffNum5Bottom", m_t5), ("BuffNum6Bottom", m_b6)):
     m_after = re.search(re.escape(header) + r' := ("\|<[^>]+>\*80\$\d+\.[\w+/]+")', after)
     assert m_after and m_after.group(1) == m_gen.group(1), f"injected {header} does not match generator output"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
-print("BuffNum4Bottom (32x11), BuffNum5Top (32x12), BuffNum6Bottom (32x11),")
+print("BuffNum4Bottom (32x11), BuffNum5Bottom (32x11), BuffNum6Bottom (32x11),")
 print("BuffNum7Bottom (22x11) and BuffNum8Right (12x32); BuffText3 removed;")
 print("verified byte-identical to generator output")

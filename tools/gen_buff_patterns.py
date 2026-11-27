@@ -226,9 +226,13 @@ print(f'  sliding-window worst separation vs other buffs: {worst:.3f} (tol 0.2) 
 # full patterns. The countdown digit lives in rows 13-21, cols 9-14, so
 # the bottom strip (y21-32) and the top strip (y0-12) are digit-free.
 # num4 bottom-full (32x11, x0-32, y21-32): self 0.082, sep 0.378.
-# num5 top-full (32x12, x0-32, y0-12): self 0.014, sep 0.345. (The left
-# strip was tried first: sep 0.464 but the "1" digit's left edge touches
-# x9-10, so the top strip is the safe choice.)
+# num5 bottom-full (32x11, x0-32, y21-32): self 0.095, sep 0.333.
+# (The top strip was tried first: self 0.014, sep 0.345, but it has only
+# 29 black pixels out of 384 (8%) -- far too sparse, and in live play it
+# matched all over the search area (log 2026-11-27 18:36-18:49: num5 hit
+# at dozens of random positions, y 114-401). The bottom strip has 84
+# black pixels (24%) and does not have this problem. The left strip was
+# also tried: sep 0.464, but the "1" digit's left edge touches x9-10.)
 # num6 bottom-full (32x11, x0-32, y21-32): self 0.088, sep 0.416.
 # All verified against both sources and sliding-window vs other buffs
 # (tol 0.2). The BuffText3 "s"-region group (add89c5) is retired: the
@@ -260,5 +264,5 @@ def sub_pattern(name, box, label):
 print()
 print('num4/5/6 sub-patterns (digit-free strips):')
 sub_pattern('buff_num4', (0, 21, 32, 32), 'buff_num4_bottom')
-sub_pattern('buff_num5', (0, 0, 32, 12), 'buff_num5_top')
+sub_pattern('buff_num5', (0, 21, 32, 32), 'buff_num5_bottom')
 sub_pattern('buff_num6', (0, 21, 32, 32), 'buff_num6_bottom')
