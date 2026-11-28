@@ -125,6 +125,10 @@ m_n4_3 = re.search(r'BuffNum4Third := ("\|<buff_num4_0003>\*80\$32\.[\w+/]+")', 
 assert m_n4_3, "generator output has no BuffNum4Third line"
 n4_3_line = f'BuffNum4Third := {m_n4_3.group(1)}'
 
+m_n4_4 = re.search(r'BuffNum4Fourth := ("\|<buff_num4_0013>\*80\$32\.[\w+/]+")', out)
+assert m_n4_4, "generator output has no BuffNum4Fourth line"
+n4_4_line = f'BuffNum4Fourth := {m_n4_4.group(1)}'
+
 m_n6_3 = re.search(r'BuffNum6Third := ("\|<buff_num6_0026>\*80\$32\.[\w+/]+")', out)
 assert m_n6_3, "generator output has no BuffNum6Third line"
 n6_3_line = f'BuffNum6Third := {m_n6_3.group(1)}'
@@ -162,6 +166,7 @@ src = inject_line(src, "ErrorText", err_line)
 src = inject_line(src, "ErrorText2", err2_line)
 src = inject_line(src, "BuffNum5Third", n5_3_line)
 src = inject_line(src, "BuffNum4Third", n4_3_line)
+src = inject_line(src, "BuffNum4Fourth", n4_4_line)
 src = inject_line(src, "BuffNum6Third", n6_3_line)
 src = inject_line(src, "BuffNum7Third", n7_3_line)
 src = inject_line(src, "BuffNum7Top", n7_top_line)
@@ -191,6 +196,8 @@ m_n5_3_after = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]
 assert m_n5_3_after and m_n5_3_after.group(1) == m_n5_3.group(1), "injected BuffNum5Third does not match generator output"
 m_n4_3_after = re.search(r'BuffNum4Third := ("\|<buff_num4_0003>\*80\$32\.[\w+/]+")', after)
 assert m_n4_3_after and m_n4_3_after.group(1) == m_n4_3.group(1), "injected BuffNum4Third does not match generator output"
+m_n4_4_after = re.search(r'BuffNum4Fourth := ("\|<buff_num4_0013>\*80\$32\.[\w+/]+")', after)
+assert m_n4_4_after and m_n4_4_after.group(1) == m_n4_4.group(1), "injected BuffNum4Fourth does not match generator output"
 m_n6_3_after = re.search(r'BuffNum6Third := ("\|<buff_num6_0026>\*80\$32\.[\w+/]+")', after)
 assert m_n6_3_after and m_n6_3_after.group(1) == m_n6_3.group(1), "injected BuffNum6Third does not match generator output"
 m_n7_3_after = re.search(r'BuffNum7Third := ("\|<buff_num7_0007>\*80\$32\.[\w+/]+")', after)

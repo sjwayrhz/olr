@@ -229,6 +229,34 @@ e1, e0 = per_class_err(bms['buff_num4'], bm_n4_3)
 f1, f0 = per_class_err(png_bms['buff_num4'], bm_n4_3)
 print(f'  BuffNum4Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
 
+# Fourth pattern for num4 only: images/buff_num4_0013.png (ScreenShot0013,
+# 2026-11-28 ScreenShots-a1c2280a.zip batch, (620,76) step-1 verified).
+# The user sent 14 screenshots asking to optimize num4. Measured at T=80:
+# num4 is present at (620,76) in 6 of them (0004/0007/0008/0011/0012/0013);
+# in the other 8 the slot is empty (0-72 black pixels) -- the buff simply
+# is not there, not a pattern miss. The existing third pattern matches the
+# 6 instances at 0.006-0.218; the most faded one (0013, 259/1024 black,
+# 25%) is at 0.218 -- just above the 0.2 tol, only caught by the 0.25
+# second stage. This fourth pattern covers the faded end: it matches the
+# 6 instances at 0.000-0.222 (5 of 6 within 0.2, 0004 at 0.222 within
+# 0.25). Separation at T=80: worst 0.279 vs buff_num7_0007, above 0.2.
+print()
+print('Fourth num4 pattern (buff_num4_0013.png, T=80, ScreenShot0013):')
+s_n4_4, bm_n4_4 = pattern_for(BASE + 'buff_num4_0013.png', 'buff_num4_0013')
+print(f'BuffNum4Fourth := "{s_n4_4}"')
+n4_4_worst = 1.0
+for other in NAMES:
+    if other == 'buff_num4':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        e1, e0 = per_class_err(bm_n4_4, src_bm)
+        n4_4_worst = min(n4_4_worst, max(e1, e0))
+print(f'  BuffNum4Fourth: sep_worst vs other buffs={n4_4_worst:.3f} (tol 0.2) {"SAFE" if n4_4_worst > 0.2 else "WOULD MISIDENTIFY"}')
+e1, e0 = per_class_err(bms['buff_num4'], bm_n4_4)
+f1, f0 = per_class_err(png_bms['buff_num4'], bm_n4_4)
+g1, g0 = per_class_err(bm_n4_3, bm_n4_4)
+print(f'  BuffNum4Fourth: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f}, third pattern vs this image max={max(g1, g0):.3f} (tol 0.2; above means the first three MISS this instance, so the fourth pattern fills a real gap)')
+
 # Third pattern for num6 only: images/buff_num6_0026.png (ScreenShot0026,
 # 2026-11-28 Desktop-db95b4ee.zip batch, top-center target buff area at
 # (618,76)). The user sent 6 screenshots and asked to optimize num6.
