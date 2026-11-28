@@ -252,11 +252,13 @@ FindBuff(i, err, &fx, &fy) {
                 }
             }
         }
-        for _, pat in pats {
-            if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, e2, &fx, &fy)) {
-                MemX[i] := fx
-                MemY[i] := fy
-                return true
+        if (MemX[i] < 0) {
+            for _, pat in pats {
+                if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, e2, &fx, &fy)) {
+                    MemX[i] := fx
+                    MemY[i] := fy
+                    return true
+                }
             }
         }
     }
