@@ -250,7 +250,6 @@ FindBuff(i, err, &fx, &fy) {
                 return true
             }
         }
-        return false
     }
     for _, pat in pats {
         if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
