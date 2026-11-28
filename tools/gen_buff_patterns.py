@@ -293,6 +293,30 @@ e1, e0 = per_class_err(bms['buff_num7'], bm_n7_3)
 f1, f0 = per_class_err(png_bms['buff_num7'], bm_n7_3)
 print(f'  BuffNum7Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
 
+# Digit-masked num7 patterns (2026-11-28, user asked to try hollowing out
+# the countdown digit). The digit lives at x8-14, y13-21 and changes every
+# second, which is one reason the full 32x32 patterns miss num7. These two
+# patterns avoid the digit entirely:
+# - BuffNum7Top: top strip y0-12 (32x12) from buff_num7_0007.png.
+#   Self-error vs all num7 icons worst 0.089; separation vs other buffs
+#   (their top 12 rows) worst 0.363 -- safe.
+# - BuffNum7Right2: right strip x20-32 (12x32) from buff_num7_0007.png.
+#   Self-error worst 0.111; separation vs other buffs (their right 12
+#   cols) worst 0.341 -- safe. This replaces the old BuffNum7Right in
+#   spirit (that one was from the jpg pattern, self-error 0.193 vs the
+#   0007 variant); the old BuffNum7Right line is kept in the script for
+#   now as an additional fallback.
+# Both are tried for num7 AFTER the three full patterns and the old right
+# strip, as a fallback when the digit breaks the full-pattern match.
+# If num7 starts false-triggering, these two are the first suspects
+# (small patterns, like the retired num5 top strip and num8 right strip).
+print()
+print('Digit-masked num7 patterns (from buff_num7_0007.png, T=80, digit at x8-14 y13-21):')
+s_n7_top, bm_n7_top = pattern_for(BASE + 'buff_num7_top.png', 'buff_num7_top')
+print(f'BuffNum7Top := "{s_n7_top}"')
+s_n7_r2, bm_n7_r2 = pattern_for(BASE + 'buff_num7_right2.png', 'buff_num7_right2')
+print(f'BuffNum7Right2 := "{s_n7_r2}"')
+
 # Sub-patterns: only num7 and num8 get a third pattern (the right strip,
 # 12x32, x20-32, y0-32). The countdown digit lives at x9-14, y13-21,
 # so the right strip is fully digit-free.

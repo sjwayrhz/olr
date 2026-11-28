@@ -129,6 +129,14 @@ m_n7_3 = re.search(r'BuffNum7Third := ("\|<buff_num7_0007>\*80\$32\.[\w+/]+")', 
 assert m_n7_3, "generator output has no BuffNum7Third line"
 n7_3_line = f'BuffNum7Third := {m_n7_3.group(1)}'
 
+m_n7_top = re.search(r'BuffNum7Top := ("\|<buff_num7_top>\*80\$32\.[\w+/]+")', out)
+assert m_n7_top, "generator output has no BuffNum7Top line"
+n7_top_line = f'BuffNum7Top := {m_n7_top.group(1)}'
+
+m_n7_r2 = re.search(r'BuffNum7Right2 := ("\|<buff_num7_right2>\*80\$12\.[\w+/]+")', out)
+assert m_n7_r2, "generator output has no BuffNum7Right2 line"
+n7_r2_line = f'BuffNum7Right2 := {m_n7_r2.group(1)}'
+
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
 
@@ -147,6 +155,8 @@ src = inject_line(src, "BuffNum5Third", n5_3_line)
 src = inject_line(src, "BuffNum4Third", n4_3_line)
 src = inject_line(src, "BuffNum6Third", n6_3_line)
 src = inject_line(src, "BuffNum7Third", n7_3_line)
+src = inject_line(src, "BuffNum7Top", n7_top_line)
+src = inject_line(src, "BuffNum7Right2", n7_r2_line)
 for header in SUBS:
     src = inject_line(src, header, sub_lines[header])
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
@@ -172,6 +182,10 @@ m_n6_3_after = re.search(r'BuffNum6Third := ("\|<buff_num6_0026>\*80\$32\.[\w+/]
 assert m_n6_3_after and m_n6_3_after.group(1) == m_n6_3.group(1), "injected BuffNum6Third does not match generator output"
 m_n7_3_after = re.search(r'BuffNum7Third := ("\|<buff_num7_0007>\*80\$32\.[\w+/]+")', after)
 assert m_n7_3_after and m_n7_3_after.group(1) == m_n7_3.group(1), "injected BuffNum7Third does not match generator output"
+m_n7_top_after = re.search(r'BuffNum7Top := ("\|<buff_num7_top>\*80\$32\.[\w+/]+")', after)
+assert m_n7_top_after and m_n7_top_after.group(1) == m_n7_top.group(1), "injected BuffNum7Top does not match generator output"
+m_n7_r2_after = re.search(r'BuffNum7Right2 := ("\|<buff_num7_right2>\*80\$12\.[\w+/]+")', after)
+assert m_n7_r2_after and m_n7_r2_after.group(1) == m_n7_r2.group(1), "injected BuffNum7Right2 does not match generator output"
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
@@ -179,6 +193,8 @@ print("BuffNum5Third (ScreenShot0011 bright fish, T=80),")
 print("BuffNum4Third (ScreenShot0003, T=80),")
 print("BuffNum6Third (ScreenShot0026, T=80),")
 print("BuffNum7Third (ScreenShot0007, T=80),")
+print("BuffNum7Top (digit-masked top strip y0-12 from 0007, T=80),")
+print("BuffNum7Right2 (digit-masked right strip x20-32 from 0007, T=80),")
 print("ErrorText (buff4s_error at T=80, 32x32, original ScreenShot0004), BuffNum7Right (12x32);")
 print("BuffNum8Right removed 2026-11-28 (terrain false positives at y=168);")
 print("num4/5/6 sub-patterns removed; verified byte-identical to generator output")
