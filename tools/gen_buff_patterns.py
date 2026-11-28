@@ -444,57 +444,10 @@ for other in NAMES:
         a1, a0 = per_class_err(err2_bm, src_bm)
         err2_worst = min(err2_worst, max(a1, a0))
 print(f'  buff4s_error_2: sep_worst vs buffs={err2_worst:.3f} (tol 0.3) {"SAFE" if err2_worst > 0.3 else "WOULD MISIDENTIFY"}')
-
-# Multi-threshold patterns for all 5 buffs (2026-11-28, user asked for
-# all buttons to be multi-threshold, EXCEPT buff4s_error which stays
-# at T=80 only). The buff icons fade in/out and their transparency
-# changes, which shifts their brightness; a fixed T=80 pattern misses
-# them when they render darker or brighter. Each buff's main pattern
-# (the _1.jpg image) is generated at T=60, T=80 and T=100:
-# - T=60 covers dark/opaque renderings (denser pattern).
-# - T=80 is the normal rendering (the existing BuffText).
-# - T=100 covers bright/transparent renderings (sparser pattern).
-# Separation between buffs at each threshold (jpg images):
-# - T=60: worst 0.284 (num6 vs num8).
-# - T=80: worst 0.333 (num4 vs num8).
-# - T=100: worst 0.284 (num4 vs num8).
-# All above the 0.2 tolerance -- no confusion between buffs. T=120 is
-# NOT used (worst sep 0.245, margin too thin). The _4.png patterns and
-# the third patterns stay at T=80 (they are different variants, not
-# different brightness levels). buff4s_error stays at T=80 only, per
-# the user's instruction -- it already has two patterns (ErrorText and
-# ErrorText2) covering two renderings.
-# FindBuff tries, for each buff: T=80 (_1.jpg), T=80 (_4.png), T=60,
-# T=100, then the third pattern and any sub-patterns.
-def multi_threshold_block(threshold):
-    global T
-    T = threshold
-    lines = []
-    bms_mt = {}
-    for name in NAMES:
-        s_mt, bm_mt = pattern_for(BASE + FILES[name], name + f'_t{threshold}')
-        bms_mt[name] = bm_mt
-        lines.append(f'    , "{s_mt}"')
-    lines[0] = lines[0].replace('    , "', '    "', 1)
-    # separation check at this threshold
-    worst_mt = 1.0
-    for i in range(len(NAMES)):
-        for j in range(i + 1, len(NAMES)):
-            a, b = NAMES[i], NAMES[j]
-            e1, e0 = per_class_err(bms_mt[a], bms_mt[b])
-            worst_mt = min(worst_mt, max(e1, e0))
-    return lines, worst_mt
-
-print()
-print('Multi-threshold patterns (all 5 buffs, _1.jpg images, T=60 and T=100):')
-mt60_lines, mt60_worst = multi_threshold_block(60)
-mt100_lines, mt100_worst = multi_threshold_block(100)
-print('BuffText60 := [')
-print('\n'.join(mt60_lines))
-print(']')
-print(f'  T=60: worst separation between buffs={mt60_worst:.3f} (tol 0.2) {"SAFE" if mt60_worst > 0.2 else "WOULD MISIDENTIFY"}')
-print('BuffText100 := [')
-print('\n'.join(mt100_lines))
-print(']')
-print(f'  T=100: worst separation between buffs={mt100_worst:.3f} (tol 0.2) {"SAFE" if mt100_worst > 0.2 else "WOULD MISIDENTIFY"}')
-T = 80
+# Multi-threshold patterns were added 2026-11-28 (commit acfdfd1) and
+# REVERTED the same day (user: all thresholds removed; they made num4/
+# num6 harder to find -- the red-arrow buffs 4/6/8 are too close at
+# T=60/T=100, sep 0.284 vs 0.333 at T=80, and the extra patterns slowed
+# the scan). The multi_threshold_block function and its output were
+# deleted; all buffs are back to T=80 only. Do not re-add without the
+# user explicitly asking.

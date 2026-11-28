@@ -100,14 +100,6 @@ assert set(by_name) == set(ORDER), f"generator BuffText names {sorted(by_name)} 
 png_lines, png_by_name = parse_block(out, "BuffText2")
 assert len(png_lines) == 5, f"expected 5 BuffText2 lines, got {len(png_lines)}"
 assert set(png_by_name) == set(PNG_ORDER), f"generator BuffText2 names {sorted(png_by_name)} != {PNG_ORDER}"
-MT60_ORDER = ["buff_num4_t60", "buff_num5_t60", "buff_num6_t60", "buff_num7_t60", "buff_num8_t60"]
-MT100_ORDER = ["buff_num4_t100", "buff_num5_t100", "buff_num6_t100", "buff_num7_t100", "buff_num8_t100"]
-mt60_lines, mt60_by_name = parse_block(out, "BuffText60")
-assert len(mt60_lines) == 5, f"expected 5 BuffText60 lines, got {len(mt60_lines)}"
-assert set(mt60_by_name) == set(MT60_ORDER), f"generator BuffText60 names {sorted(mt60_by_name)} != {MT60_ORDER}"
-mt100_lines, mt100_by_name = parse_block(out, "BuffText100")
-assert len(mt100_lines) == 5, f"expected 5 BuffText100 lines, got {len(mt100_lines)}"
-assert set(mt100_by_name) == set(MT100_ORDER), f"generator BuffText100 names {sorted(mt100_by_name)} != {MT100_ORDER}"
 SUBS = {"BuffNum7Right": ("buff_num7_right", 12)}
 sub_lines = {}
 sub_matches = {}
@@ -151,11 +143,13 @@ n7_r2_line = f'BuffNum7Right2 := {m_n7_r2.group(1)}'
 
 new_text = emit_block(ORDER, by_name)
 new_png = emit_block(PNG_ORDER, png_by_name)
-new_mt60 = emit_block(MT60_ORDER, mt60_by_name)
-new_mt100 = emit_block(MT100_ORDER, mt100_by_name)
 
 src = open(AHK, encoding="utf-8-sig").read()
 src = inject_block(src, "BuffText", new_text)
+# Multi-threshold blocks were reverted 2026-11-28 (user: all thresholds
+# removed; they made num4/num6 harder to find). Delete any stale copies.
+src = delete_block(src, "BuffText60")
+src = delete_block(src, "BuffText100")
 src = delete_block(src, "BuffNum7Text")
 src = delete_block(src, "BuffText3")
 if "BuffText2 := [" in src:
@@ -164,18 +158,6 @@ else:
     anchor = "BuffText := [\n" + "\n".join(new_text) + "\n]"
     idx = src.index(anchor) + len(anchor)
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
-if "BuffText60 := [" in src:
-    src = inject_block(src, "BuffText60", new_mt60)
-else:
-    anchor2 = "BuffText2 := [\n" + "\n".join(new_png) + "\n]"
-    idx = src.index(anchor2) + len(anchor2)
-    src = src[:idx] + "\nBuffText60 := [\n" + "\n".join(new_mt60) + "\n]" + src[idx:]
-if "BuffText100 := [" in src:
-    src = inject_block(src, "BuffText100", new_mt100)
-else:
-    anchor60 = "BuffText60 := [\n" + "\n".join(new_mt60) + "\n]"
-    idx = src.index(anchor60) + len(anchor60)
-    src = src[:idx] + "\nBuffText100 := [\n" + "\n".join(new_mt100) + "\n]" + src[idx:]
 src = inject_line(src, "ErrorText", err_line)
 src = inject_line(src, "ErrorText2", err2_line)
 src = inject_line(src, "BuffNum5Third", n5_3_line)
@@ -193,19 +175,8 @@ open(AHK, "w", encoding="utf-8-sig", newline="").write(src)
 after = open(AHK, encoding="utf-8-sig").read()
 verify_block(after, "BuffText", ORDER, new_text)
 verify_block(after, "BuffText2", PNG_ORDER, new_png)
-# verify_block checks for "*80$" in every line; the multi-threshold
-# blocks use *60$ and *100$, so verify them with a custom check.
-def verify_mt_block(after, header, order, new_lines, threshold):
-    m = re.search(re.escape(header) + r" := \[\n(.*?)\n\]", after, re.S)
-    got = [ln for ln in m.group(1).splitlines() if ln.strip()]
-    assert got == new_lines, f"injected {header} does not match expected block"
-    assert got[0].lstrip().startswith('"'), f"{header}: first element must not have a leading comma"
-    assert all(ln.lstrip().startswith(', "') for ln in got[1:]), f"{header}: later elements need a leading comma"
-    for name, ln in zip(order, got):
-        assert f"|<{name}>" in ln, f"{header} line {ln[:40]} is not {name}"
-        assert f"*{threshold}$" in ln, f"{header} wrong threshold in line: {ln[:50]}"
-verify_mt_block(after, "BuffText60", MT60_ORDER, new_mt60, 60)
-verify_mt_block(after, "BuffText100", MT100_ORDER, new_mt100, 100)
+assert "BuffText60" not in after, "BuffText60 block was not removed (multi-threshold reverted 2026-11-28)"
+assert "BuffText100" not in after, "BuffText100 block was not removed (multi-threshold reverted 2026-11-28)"
 assert "BuffNum7Text" not in after, "BuffNum7Text block was not removed"
 assert "BuffText3" not in after, "BuffText3 block was not removed"
 for header, (label, width) in SUBS.items():
@@ -231,7 +202,6 @@ assert m_n7_r2_after and m_n7_r2_after.group(1) == m_n7_r2.group(1), "injected B
 for old in ("BuffNum4Top", "BuffNum4Right", "BuffNum4Bottom", "BuffNum5Right", "BuffNum5Bottom", "BuffNum5Top", "BuffNum6Right", "BuffNum6Bottom", "BuffNum7Bottom", "BuffNum8Right"):
     assert old not in after, f"old {old} was not removed"
 print("injected BuffText (5 patterns at T=80), BuffText2 (5 png patterns at T=80),")
-print("BuffText60 (5 patterns at T=60), BuffText100 (5 patterns at T=100),")
 print("BuffNum5Third (ScreenShot0011 bright fish, T=80),")
 print("BuffNum4Third (ScreenShot0003, T=80),")
 print("BuffNum6Third (ScreenShot0026, T=80),")
