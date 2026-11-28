@@ -18,7 +18,7 @@ ErrNum8 := 0.2
 BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
 ScanMs := 25
 NearR := 10
-StripRX := 100
+StripRX := 50
 
 SearchX1 := 518
 SearchY1 := 0
@@ -239,7 +239,7 @@ FindBuff(i, err, &fx, &fy) {
                 return true
             }
         }
-        sx1 := Max(MemX[i] - StripRX, 0)
+        sx1 := Max(MemX[i] - NearR, 0)
         sy1 := Max(MemY[i] - NearR, 0)
         sx2 := Min(MemX[i] + StripRX, A_ScreenWidth)
         sy2 := Min(MemY[i] + NearR, A_ScreenHeight)
