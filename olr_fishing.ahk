@@ -17,7 +17,8 @@ ErrNum7 := 0.2
 ErrNum8 := 0.2
 BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
 ScanMs := 50
-NearR := 100
+NearR := 10
+StripRX := 100
 
 SearchX1 := 518
 SearchY1 := 0
@@ -209,7 +210,7 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, BuffNum4Third, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum7Right, BuffNum7Top, BuffNum7Right2, MemX, MemY, NearR, FoundNear
+    global BuffText, BuffText2, BuffNum4Third, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum7Right, BuffNum7Top, BuffNum7Right2, MemX, MemY, NearR, StripRX, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     pats := [BuffText[i], BuffText2[i]]
@@ -238,6 +239,18 @@ FindBuff(i, err, &fx, &fy) {
                 return true
             }
         }
+        sx1 := Max(MemX[i] - StripRX, 0)
+        sy1 := Max(MemY[i] - NearR, 0)
+        sx2 := Min(MemX[i] + StripRX, A_ScreenWidth)
+        sy2 := Min(MemY[i] + NearR, A_ScreenHeight)
+        for _, pat in pats {
+            if (TryFind(pat, sx1, sy1, sx2, sy2, err, &fx, &fy)) {
+                MemX[i] := fx
+                MemY[i] := fy
+                return true
+            }
+        }
+        return false
     }
     for _, pat in pats {
         if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
