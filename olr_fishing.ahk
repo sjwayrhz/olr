@@ -8,6 +8,7 @@ global FoundNear := false
 global Scanning := false
 
 global RestUntil := [0, 0, 0, 0, 0]
+global ProtectUntil := 0
 global LastBuff := 0
 
 ErrNum4 := 0.2
@@ -212,7 +213,7 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, BuffNum4Third, BuffNum4Fourth, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum8Third, BuffNum7Right, BuffNum7Top, BuffNum7Right2, MemX, MemY, NearR, StripRX, FoundNear
+    global BuffText, BuffText2, BuffNum4Third, BuffNum4Fourth, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum8Third, BuffNum7Right, BuffNum7Top, BuffNum7Right2, MemX, MemY, NearR, StripRX, FoundNear, ProtectUntil
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     pats := [BuffText[i], BuffText2[i]]
@@ -232,7 +233,13 @@ FindBuff(i, err, &fx, &fy) {
     }
     if (i = 5)
         pats.Push(BuffNum8Third)
-    for _, e2 in [err, 0.25] {
+    effErr := err
+    effErr2 := 0.25
+    if (i <= 3 && A_TickCount < ProtectUntil) {
+        effErr := 0.1
+        effErr2 := 0.1
+    }
+    for _, e2 in [effErr, effErr2] {
         if (MemX[i] >= 0) {
             x1 := Max(MemX[i] - NearR - 16, 0)
             y1 := Max(MemY[i] - NearR - 16, 0)
@@ -307,7 +314,7 @@ LogAction(i, fx, fy, label) {
 }
 
 DoBuffAction(i) {
-    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, LastBuff
+    global BuffKey, BuffSpace, RestShort, RestLong, RestUntil, LastBuff, ProtectUntil
     Send("{" BuffKey[i] "}")
     if (BuffSpace[i]) {
         Sleep(2000)
@@ -315,4 +322,7 @@ DoBuffAction(i) {
     }
     LastBuff := i
     RestUntil[i] := A_TickCount + (BuffSpace[i] ? RestShort : RestLong)
+    if (i = 4 || i = 5) {
+        ProtectUntil := A_TickCount + RestLong
+    }
 }
