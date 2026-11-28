@@ -226,36 +226,38 @@ FindBuff(i, err, &fx, &fy) {
         pats.Push(BuffNum7Top)
         pats.Push(BuffNum7Right2)
     }
-    if (MemX[i] >= 0) {
-        x1 := Max(MemX[i] - NearR, 0)
-        y1 := Max(MemY[i] - NearR, 0)
-        x2 := Min(MemX[i] + NearR, A_ScreenWidth)
-        y2 := Min(MemY[i] + NearR, A_ScreenHeight)
-        for _, pat in pats {
-            if (TryFind(pat, x1, y1, x2, y2, err, &fx, &fy)) {
-                MemX[i] := fx
-                MemY[i] := fy
-                FoundNear := true
-                return true
+    for _, e2 in [err, 0.3] {
+        if (MemX[i] >= 0) {
+            x1 := Max(MemX[i] - NearR, 0)
+            y1 := Max(MemY[i] - NearR, 0)
+            x2 := Min(MemX[i] + NearR, A_ScreenWidth)
+            y2 := Min(MemY[i] + NearR, A_ScreenHeight)
+            for _, pat in pats {
+                if (TryFind(pat, x1, y1, x2, y2, e2, &fx, &fy)) {
+                    MemX[i] := fx
+                    MemY[i] := fy
+                    FoundNear := true
+                    return true
+                }
+            }
+            sx1 := Max(MemX[i] - NearR, 0)
+            sy1 := Max(MemY[i] - NearR, 0)
+            sx2 := Min(MemX[i] + StripRX, A_ScreenWidth)
+            sy2 := Min(MemY[i] + NearR, A_ScreenHeight)
+            for _, pat in pats {
+                if (TryFind(pat, sx1, sy1, sx2, sy2, e2, &fx, &fy)) {
+                    MemX[i] := fx
+                    MemY[i] := fy
+                    return true
+                }
             }
         }
-        sx1 := Max(MemX[i] - NearR, 0)
-        sy1 := Max(MemY[i] - NearR, 0)
-        sx2 := Min(MemX[i] + StripRX, A_ScreenWidth)
-        sy2 := Min(MemY[i] + NearR, A_ScreenHeight)
         for _, pat in pats {
-            if (TryFind(pat, sx1, sy1, sx2, sy2, err, &fx, &fy)) {
+            if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, e2, &fx, &fy)) {
                 MemX[i] := fx
                 MemY[i] := fy
                 return true
             }
-        }
-    }
-    for _, pat in pats {
-        if (TryFind(pat, SearchX1, SearchY1, SearchX2, SearchY2, err, &fx, &fy)) {
-            MemX[i] := fx
-            MemY[i] := fy
-            return true
         }
     }
     return false
