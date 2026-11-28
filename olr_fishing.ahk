@@ -226,7 +226,7 @@ FindBuff(i, err, &fx, &fy) {
         pats.Push(BuffNum7Top)
         pats.Push(BuffNum7Right2)
     }
-    for _, e2 in [err, 0.28] {
+    for _, e2 in [err, 0.25] {
         if (MemX[i] >= 0) {
             x1 := Max(MemX[i] - NearR, 0)
             y1 := Max(MemY[i] - NearR, 0)
