@@ -113,6 +113,10 @@ m_err = re.search(r'buff4s_error := ("\|<buff4s_error>\*80\$32\.[\w+/]+")', out)
 assert m_err, "generator output has no buff4s_error line"
 err_line = f'ErrorText := {m_err.group(1)}'
 
+m_err2 = re.search(r'buff4s_error_2 := ("\|<buff4s_error_2>\*80\$32\.[\w+/]+")', out)
+assert m_err2, "generator output has no buff4s_error_2 line"
+err2_line = f'ErrorText2 := {m_err2.group(1)}'
+
 m_n5_3 = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', out)
 assert m_n5_3, "generator output has no BuffNum5Third line"
 n5_3_line = f'BuffNum5Third := {m_n5_3.group(1)}'
@@ -151,6 +155,7 @@ else:
     idx = src.index(anchor) + len(anchor)
     src = src[:idx] + "\nBuffText2 := [\n" + "\n".join(new_png) + "\n]" + src[idx:]
 src = inject_line(src, "ErrorText", err_line)
+src = inject_line(src, "ErrorText2", err2_line)
 src = inject_line(src, "BuffNum5Third", n5_3_line)
 src = inject_line(src, "BuffNum4Third", n4_3_line)
 src = inject_line(src, "BuffNum6Third", n6_3_line)
@@ -174,6 +179,8 @@ for header, (label, width) in SUBS.items():
     assert m_after and m_after.group(1) == sub_matches[header].group(1), f"injected {header} does not match generator output"
 m_err_after = re.search(r'ErrorText := ("\|<buff4s_error>\*80\$32\.[\w+/]+")', after)
 assert m_err_after and m_err_after.group(1) == m_err.group(1), "injected ErrorText does not match generator output"
+m_err2_after = re.search(r'ErrorText2 := ("\|<buff4s_error_2>\*80\$32\.[\w+/]+")', after)
+assert m_err2_after and m_err2_after.group(1) == m_err2.group(1), "injected ErrorText2 does not match generator output"
 m_n5_3_after = re.search(r'BuffNum5Third := ("\|<buff_num5_0011>\*80\$32\.[\w+/]+")', after)
 assert m_n5_3_after and m_n5_3_after.group(1) == m_n5_3.group(1), "injected BuffNum5Third does not match generator output"
 m_n4_3_after = re.search(r'BuffNum4Third := ("\|<buff_num4_0003>\*80\$32\.[\w+/]+")', after)
@@ -195,6 +202,6 @@ print("BuffNum6Third (ScreenShot0026, T=80),")
 print("BuffNum7Third (ScreenShot0007, T=80),")
 print("BuffNum7Top (digit-masked top strip y0-12 from 0007, T=80),")
 print("BuffNum7Right2 (digit-masked right strip x20-32 from 0007, T=80),")
-print("ErrorText (buff4s_error at T=80, 32x32, original ScreenShot0004), BuffNum7Right (12x32);")
+print("ErrorText (buff4s_error at T=80, 32x32, original ScreenShot0004), ErrorText2 (buff4s_error_2 at T=80, ScreenShot0004 2026-11-28), BuffNum7Right (12x32);")
 print("BuffNum8Right removed 2026-11-28 (terrain false positives at y=168);")
 print("num4/5/6 sub-patterns removed; verified byte-identical to generator output")

@@ -42,6 +42,7 @@ BuffText2 := [
     , "|<buff_num7_png>*80$32.k0000M00000zy03wD000z3U007my2P1wC20MD3301VkUW0AQ2001X9VW+8kkTM048XlUF0/aT002l7k00RL4E06rrG010wlkAzTa225rxUEUBsS489zzE2EU7zUU23Cs80C162810D0U3020+3U032qE67kbk03wU0000S0802C"
     , "|<buff_num8_png>*80$32.k0000E00000zzzzwDkTyD3lnzDkwCTrwC0xnz3UiBzks71zwC1UDz3kk1zky80TwDjE3z3zY0Tkzl3nwDtF7z3yqLzkz04vwDzNaT3zoxnkht8So01lz00003s0020jU002FU04/wM003X0000kE00AM3000400000000800006"
 ]
+ErrorText2 := "|<buff4s_error_2>*80$32.0000000000000000Tzzzy7yLzzVz1zzsTyTzy4bDzzVfXzzsQtzzy7CTzzVfbzzsGHzzy7zzzzVzjzzsTvzzy7yzxzVyDzDsTzzzy7zzzzVzzzrsTzzvy7zzxzVzzzzsTxzzy7zjzzVzzzzsTzXzy7zkTzVzs3zsTy0zy000002"
 BuffNum7Right2 := "|<buff_num7_right2>*80$12.00003w3w1w0wUwMQAQ4A0A0400E0k0F0oUkEE8E4I4o0s8AM0M1U20040w3w0000U"
 BuffNum7Top := "|<buff_num7_top>*80$32.00000000000zs03wD000z30007kw2E0wC008D3301VkU00AQ200131UU00kkNE04U"
 BuffNum7Third := "|<buff_num7_0007>*80$32.00000000000zs03wD000z30007kw2E0wC008D3301VkU00AQ200131UU00kkNE0483U0001cR000m7k00CV4E03eLG00OAkE06zY221jx0EU3sI487zx02007UUU02AM80606200060U1020+2U012oE43kZk03w00000000002"
@@ -200,9 +201,11 @@ CanPress(i) {
 }
 
 FindError(&ex, &ey) {
-    global ErrorText, ErrorErr
+    global ErrorText, ErrorText2, ErrorErr
     global SearchX1, SearchY1, SearchX2, SearchY2
-    return TryFind(ErrorText, SearchX1, SearchY1, SearchX2, SearchY2, ErrorErr, &ex, &ey)
+    if (TryFind(ErrorText, SearchX1, SearchY1, SearchX2, SearchY2, ErrorErr, &ex, &ey))
+        return true
+    return TryFind(ErrorText2, SearchX1, SearchY1, SearchX2, SearchY2, ErrorErr, &ex, &ey)
 }
 
 FindBuff(i, err, &fx, &fy) {

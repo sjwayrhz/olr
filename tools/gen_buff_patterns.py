@@ -412,3 +412,35 @@ for other in NAMES:
         a1, a0 = per_class_err(err_bm, src_bm)
         err_worst = min(err_worst, max(a1, a0))
 print(f'  buff4s_error: sep_worst vs buffs={err_worst:.3f} (tol 0.3) {"SAFE" if err_worst > 0.3 else "WOULD MISIDENTIFY"}')
+
+# Second error pattern (2026-11-28, user sent ScreenShots.zip with 9
+# screenshots and asked to extract the error icons and strengthen the
+# error detection). The 9 icons were found by step-1 search in the buff
+# bar rows: (620,75) in ScreenShot0000-0004, (653,75) in 0005/0007/0008/
+# 0009. All 9 are nearly identical (worst pairwise err 0.050). The most
+# representative is ScreenShot0004 (avg err 0.030 vs the other 8), saved
+# as images/buff4s_error_2.png. Note: the CURRENT error pattern (from
+# 2026-11-26) has 801 black px, the live icons only 700-709 -- the
+# rendering got sparser. The old pattern still matches (err 0.121-0.129),
+# but the new one matches much better (worst 0.044). The two patterns
+# are 0.308 apart, so together they cover both renderings. Separation
+# vs buffs worst 0.474 -- safe. FindError tries both (OR logic).
+print()
+print('Second buff4s_error pattern (buff4s_error_2.png, T=80, ScreenShot0004 (620,75)):')
+err2_im = Image.open(BASE + 'buff4s_error_2.png').convert('RGB')
+err2_px = err2_im.load()
+err2_bm = [[1 if gray(err2_px[x, y]) <= 80 else 0 for x in range(32)] for y in range(32)]
+err2_s = encode(err2_bm, 32, 'buff4s_error_2')
+print(f'buff4s_error_2 := "{err2_s}"')
+err2_t, err2_bm2 = decode(err2_s)
+assert err2_bm2 == err2_bm, 'round-trip mismatch for buff4s_error_2'
+assert err2_t == 80, 'second error pattern threshold is not 80'
+err2_worst = 1.0
+for other in NAMES:
+    for src_path in (BASE + FILES[other], BASE + other + '_4.png'):
+        src_im = Image.open(src_path).convert('RGB')
+        src_px = src_im.load()
+        src_bm = [[1 if gray(src_px[x, y]) <= 80 else 0 for x in range(32)] for y in range(32)]
+        a1, a0 = per_class_err(err2_bm, src_bm)
+        err2_worst = min(err2_worst, max(a1, a0))
+print(f'  buff4s_error_2: sep_worst vs buffs={err2_worst:.3f} (tol 0.3) {"SAFE" if err2_worst > 0.3 else "WOULD MISIDENTIFY"}')
