@@ -16,7 +16,7 @@ ErrNum6 := 0.2
 ErrNum7 := 0.2
 ErrNum8 := 0.2
 BuffErr := [ErrNum4, ErrNum5, ErrNum6, ErrNum7, ErrNum8]
-ScanMs := 10
+ScanMs := 50
 NearR := 100
 
 SearchX1 := 518
@@ -71,9 +71,9 @@ MemX := [-1, -1, -1, -1, -1]
 MemY := [-1, -1, -1, -1, -1]
 
 SetTimer(FishTimer1, ScanMs)
-SetTimer(StartFishTimer2, -2)
-SetTimer(StartFishTimer3, -5)
-SetTimer(StartFishTimer4, -7)
+SetTimer(StartFishTimer2, -12)
+SetTimer(StartFishTimer3, -25)
+SetTimer(StartFishTimer4, -37)
 
 SetTimer(BloodCheck, 500)
 
