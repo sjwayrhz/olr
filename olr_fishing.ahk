@@ -228,10 +228,10 @@ FindBuff(i, err, &fx, &fy) {
     }
     for _, e2 in [err, 0.25] {
         if (MemX[i] >= 0) {
-            x1 := Max(MemX[i] - NearR, 0)
-            y1 := Max(MemY[i] - NearR, 0)
-            x2 := Min(MemX[i] + NearR, A_ScreenWidth)
-            y2 := Min(MemY[i] + NearR, A_ScreenHeight)
+            x1 := Max(MemX[i] - NearR - 16, 0)
+            y1 := Max(MemY[i] - NearR - 16, 0)
+            x2 := Min(MemX[i] + NearR + 16, A_ScreenWidth)
+            y2 := Min(MemY[i] + NearR + 16, A_ScreenHeight)
             for _, pat in pats {
                 if (TryFind(pat, x1, y1, x2, y2, e2, &fx, &fy)) {
                     MemX[i] := fx
@@ -240,10 +240,10 @@ FindBuff(i, err, &fx, &fy) {
                     return true
                 }
             }
-            sx1 := Max(MemX[i] - NearR, 0)
-            sy1 := Max(MemY[i] - NearR, 0)
-            sx2 := Min(MemX[i] + StripRX, A_ScreenWidth)
-            sy2 := Min(MemY[i] + NearR, A_ScreenHeight)
+            sx1 := Max(MemX[i] - NearR - 16, 0)
+            sy1 := Max(MemY[i] - NearR - 16, 0)
+            sx2 := Min(MemX[i] + StripRX + 16, A_ScreenWidth)
+            sy2 := Min(MemY[i] + NearR + 16, A_ScreenHeight)
             for _, pat in pats {
                 if (TryFind(pat, sx1, sy1, sx2, sy2, e2, &fx, &fy)) {
                     MemX[i] := fx
