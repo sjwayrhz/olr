@@ -137,6 +137,10 @@ m_n7_3 = re.search(r'BuffNum7Third := ("\|<buff_num7_0007>\*80\$32\.[\w+/]+")', 
 assert m_n7_3, "generator output has no BuffNum7Third line"
 n7_3_line = f'BuffNum7Third := {m_n7_3.group(1)}'
 
+m_n8_3 = re.search(r'BuffNum8Third := ("\|<buff_num8_0004>\*80\$32\.[\w+/]+")', out)
+assert m_n8_3, "generator output has no BuffNum8Third line"
+n8_3_line = f'BuffNum8Third := {m_n8_3.group(1)}'
+
 m_n7_top = re.search(r'BuffNum7Top := ("\|<buff_num7_top>\*80\$32\.[\w+/]+")', out)
 assert m_n7_top, "generator output has no BuffNum7Top line"
 n7_top_line = f'BuffNum7Top := {m_n7_top.group(1)}'
@@ -169,6 +173,7 @@ src = inject_line(src, "BuffNum4Third", n4_3_line)
 src = inject_line(src, "BuffNum4Fourth", n4_4_line)
 src = inject_line(src, "BuffNum6Third", n6_3_line)
 src = inject_line(src, "BuffNum7Third", n7_3_line)
+src = inject_line(src, "BuffNum8Third", n8_3_line)
 src = inject_line(src, "BuffNum7Top", n7_top_line)
 src = inject_line(src, "BuffNum7Right2", n7_r2_line)
 for header in SUBS:
@@ -202,6 +207,8 @@ m_n6_3_after = re.search(r'BuffNum6Third := ("\|<buff_num6_0026>\*80\$32\.[\w+/]
 assert m_n6_3_after and m_n6_3_after.group(1) == m_n6_3.group(1), "injected BuffNum6Third does not match generator output"
 m_n7_3_after = re.search(r'BuffNum7Third := ("\|<buff_num7_0007>\*80\$32\.[\w+/]+")', after)
 assert m_n7_3_after and m_n7_3_after.group(1) == m_n7_3.group(1), "injected BuffNum7Third does not match generator output"
+m_n8_3_after = re.search(r'BuffNum8Third := ("\|<buff_num8_0004>\*80\$32\.[\w+/]+")', after)
+assert m_n8_3_after and m_n8_3_after.group(1) == m_n8_3.group(1), "injected BuffNum8Third does not match generator output"
 m_n7_top_after = re.search(r'BuffNum7Top := ("\|<buff_num7_top>\*80\$32\.[\w+/]+")', after)
 assert m_n7_top_after and m_n7_top_after.group(1) == m_n7_top.group(1), "injected BuffNum7Top does not match generator output"
 m_n7_r2_after = re.search(r'BuffNum7Right2 := ("\|<buff_num7_right2>\*80\$12\.[\w+/]+")', after)

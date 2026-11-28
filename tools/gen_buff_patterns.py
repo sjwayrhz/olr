@@ -321,6 +321,40 @@ e1, e0 = per_class_err(bms['buff_num7'], bm_n7_3)
 f1, f0 = per_class_err(png_bms['buff_num7'], bm_n7_3)
 print(f'  BuffNum7Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
 
+# Third pattern for num8 only: images/buff_num8_0004.png (ScreenShot0004,
+# 2026-11-28 ScreenShots-164fe936.zip batch, (619,76) step-1 verified --
+# NOTE the true slot is (619,76), not (620,76): at (619,76) the stored
+# patterns match at 0.019-0.152, at (620,76) only 0.166-0.209.
+# The user sent 19 screenshots asking to optimize num8. Measured at T=80:
+# num8 is present at (619,76) in 11 of them; the stored two patterns
+# match those at 0.019-0.222 (10 of 11 within 0.2). The outlier is
+# ScreenShot0004: a faded rendering (198/1024 black, 19%), 0.185-0.235
+# away from every other instance, matched by the stored patterns only at
+# 0.222/0.243 -- caught only by the 0.25 second stage. This third pattern
+# covers that faded variant at 0.0. In the other 8 screenshots num8 is
+# NOT on screen at all in normal form (full-screen search, nothing under
+# 0.26) -- the faint icons in the slot (36-146 black) are closest to the
+# sparse buff_num5_0011 pattern, not num8, and too sparse to use. The red
+# crossed-swords buff at (586,76) resembles num8 (0.278) but is a
+# DIFFERENT buff -- never make a pattern from it, it would false-press 8.
+# Separation at T=80: worst 0.223 vs buff_num5_0011 (thin, above 0.2).
+# Black density 198/1024 (19%), comparable to num7 third (22%).
+print()
+print('Third num8 pattern (buff_num8_0004.png, T=80, ScreenShot0004):')
+s_n8_3, bm_n8_3 = pattern_for(BASE + 'buff_num8_0004.png', 'buff_num8_0004')
+print(f'BuffNum8Third := "{s_n8_3}"')
+n8_3_worst = 1.0
+for other in NAMES:
+    if other == 'buff_num8':
+        continue
+    for src_bm in (bms[other], png_bms[other]):
+        e1, e0 = per_class_err(bm_n8_3, src_bm)
+        n8_3_worst = min(n8_3_worst, max(e1, e0))
+print(f'  BuffNum8Third: sep_worst vs other buffs={n8_3_worst:.3f} (tol 0.2) {"SAFE" if n8_3_worst > 0.2 else "WOULD MISIDENTIFY"}')
+e1, e0 = per_class_err(bms['buff_num8'], bm_n8_3)
+f1, f0 = per_class_err(png_bms['buff_num8'], bm_n8_3)
+print(f'  BuffNum8Third: existing jpg pattern vs this image max={max(e1, e0):.3f}, existing png pattern vs this image max={max(f1, f0):.3f} (tol 0.2; above means the first two MISS this instance, so the third pattern fills a real gap)')
+
 # Digit-masked num7 patterns (2026-11-28, user asked to try hollowing out
 # the countdown digit). The digit lives at x8-14, y13-21 and changes every
 # second, which is one reason the full 32x32 patterns miss num7. These two

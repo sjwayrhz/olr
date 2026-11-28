@@ -42,6 +42,7 @@ BuffText2 := [
     , "|<buff_num7_png>*80$32.k0000M00000zy03wD000z3U007my2P1wC20MD3301VkUW0AQ2001X9VW+8kkTM048XlUF0/aT002l7k00RL4E06rrG010wlkAzTa225rxUEUBsS489zzE2EU7zUU23Cs80C162810D0U3020+3U032qE67kbk03wU0000S0802C"
     , "|<buff_num8_png>*80$32.k0000E00000zzzzwDkTyD3lnzDkwCTrwC0xnz3UiBzks71zwC1UDz3kk1zky80TwDjE3z3zY0Tkzl3nwDtF7z3yqLzkz04vwDzNaT3zoxnkht8So01lz00003s0020jU002FU04/wM003X0000kE00AM3000400000000800006"
 ]
+BuffNum8Third := "|<buff_num8_0004>*80$32.00000000000/bztw9UTy700VrAk46Sbg00MlT0040vE020Hg010CH00U1HE0M09g0Dk130400G01x3W80Sl4U034L800QYl00D9Y006qRU01V0Q00DVw00003k000030000100000000100000U000000000000000000000002"
 BuffNum4Fourth := "|<buff_num4_0013>*80$32.00000000000zzzzsTzzly7zzU7Vszk1sQ001C700DnVk07qEQ03Ia703TwVk0M98I734851EO+1sI7hU6B2841XEjV0dI9gU8539U0/MuA04r0UU0DDs00000000000000000000400C2000000002000010000000000000002"
 
 ErrorText2 := "|<buff4s_error_2>*80$32.0000000000000000Tzzzy7yLzzVz1zzsTyTzy4bDzzVfXzzsQtzzy7CTzzVfbzzsGHzzy7zzzzVzjzzsTvzzy7yzxzVyDzDsTzzzy7zzzzVzzzrsTzzvy7zzxzVzzzzsTxzzy7zjzzVzzzzsTzXzy7zkTzVzs3zsTy0zy000002"
@@ -211,7 +212,7 @@ FindError(&ex, &ey) {
 }
 
 FindBuff(i, err, &fx, &fy) {
-    global BuffText, BuffText2, BuffNum4Third, BuffNum4Fourth, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum7Right, BuffNum7Top, BuffNum7Right2, MemX, MemY, NearR, StripRX, FoundNear
+    global BuffText, BuffText2, BuffNum4Third, BuffNum4Fourth, BuffNum5Third, BuffNum6Third, BuffNum7Third, BuffNum8Third, BuffNum7Right, BuffNum7Top, BuffNum7Right2, MemX, MemY, NearR, StripRX, FoundNear
     global SearchX1, SearchY1, SearchX2, SearchY2
     FoundNear := false
     pats := [BuffText[i], BuffText2[i]]
@@ -229,6 +230,8 @@ FindBuff(i, err, &fx, &fy) {
         pats.Push(BuffNum7Top)
         pats.Push(BuffNum7Right2)
     }
+    if (i = 5)
+        pats.Push(BuffNum8Third)
     for _, e2 in [err, 0.25] {
         if (MemX[i] >= 0) {
             x1 := Max(MemX[i] - NearR - 16, 0)
