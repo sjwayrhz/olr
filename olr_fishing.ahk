@@ -246,7 +246,7 @@ FindBuff(i, err, &fx, &fy) {
                     return true
                 }
             }
-            sx1 := Max(MemX[i] - NearR - 16, 0)
+            sx1 := Max(MemX[i] - StripRX - 16, 0)
             sy1 := Max(MemY[i] - NearR - 16, 0)
             sx2 := Min(MemX[i] + StripRX + 16, A_ScreenWidth)
             sy2 := Min(MemY[i] + NearR + 16, A_ScreenHeight)
